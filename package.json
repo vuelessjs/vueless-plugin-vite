@@ -1,0 +1,33 @@
+{
+  "name": "@vueless/vite-plugin",
+  "version": "0.0.4",
+  "description": "Vite plugin which extends Vueless UI library functionality.",
+  "homepage": "https://vueless.com",
+  "author": "Johnny Grid",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vuelessjs/vite-plugin-vueless.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vuelessjs/vite-plugin-vueless/issues"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@vue/compiler-sfc": "^3.4.19",
+    "svgo": "^3.2.0",
+    "unplugin-vue-components": "^0.26.0"
+  },
+  "peerDependencies": {
+    "vueless": "^0.0.3"
+  }
+}
