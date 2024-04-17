@@ -54,13 +54,11 @@ export function createTailwindSafelist() {
 
   const srcVueFiles = getFiles("src", ".vue");
   const vuelessVueFiles = getFiles("node_modules/vueless/src", ".vue");
-  const vuelessLayoutVueFiles = getFiles(".vueless-layouts", ".vue");
   const vuelessJsConfigFiles = getFiles("node_modules/vueless/src", ".config.js");
 
   const files = [
     ...srcVueFiles,
     ...vuelessVueFiles,
-    ...vuelessLayoutVueFiles,
     ...vuelessJsConfigFiles,
   ];
 

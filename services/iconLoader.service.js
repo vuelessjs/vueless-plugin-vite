@@ -37,16 +37,10 @@ export function copyIcons(mode = "src", debug) {
 
   const vuelessVueFiles = getFiles("node_modules/vueless/src", ".vue");
   const vuelessJsFiles = getFiles("node_modules/vueless/src", ".js");
-  const vuelessLayoutsVueFiles = getFiles(".vueless-layouts", ".vue");
-  const vuelessLayoutsJsFiles = getFiles(".vueless-layouts", ".js");
-  const vuelessServicesJsFiles = getFiles(".vueless-services", ".js");
 
   findAndCopyIcons([
     ...vuelessVueFiles,
     ...vuelessJsFiles,
-    ...vuelessLayoutsVueFiles,
-    ...vuelessLayoutsJsFiles,
-    ...vuelessServicesJsFiles,
     "vueless.config.js",
     "vueless.config.ts",
   ]);
