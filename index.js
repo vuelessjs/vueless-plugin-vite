@@ -40,9 +40,9 @@ export const Vueless = function (options = {}) {
     configResolved: (config) => {
       if (config.command === "build") {
         /* collect used in project colors for tailwind safelist */
-        createTailwindSafelist();
+        createTailwindSafelist(options.mode, options.env, options.debug);
         /* dynamically copy used icons before build */
-        copyIcons(options.mode, options.debug);
+        copyIcons(options.mode, options.env, options.debug);
       }
 
       if (config.command === "dev" || config.command === "serve") {

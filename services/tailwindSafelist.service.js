@@ -4,7 +4,6 @@ import path from "path";
 import vuelessConfig from "../../../../vueless.config.js";
 import { components } from "../resolvers/vueless.resolver.js";
 
-// TODO: Move to vueles consts
 const brandColors = [
   "brand",
   "red",
@@ -49,22 +48,27 @@ const COMPONENTS_WITH_COLOR_PROP = [
   "UDot",
 ];
 
-export function createTailwindSafelist() {
+let isDebug = false;
+
+export function createTailwindSafelist(mode, env, debug) {
+  isDebug = debug || false;
+
   const safelist = [];
+  const isVuelessEnv = env === "vueless";
+  const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless/src";
 
-  const srcVueFiles = getFiles("src", ".vue");
-  const vuelessVueFiles = getFiles("node_modules/vueless/src", ".vue");
-  const vuelessJsConfigFiles = getFiles("node_modules/vueless/src", ".config.js");
+  const srcVueFiles = isVuelessEnv ? [] : getFiles("src", ".vue");
+  const vuelessVueFiles = getFiles(vuelessFilePath, ".vue");
+  const vuelessJsConfigFiles = getFiles(vuelessFilePath, ".config.js");
 
-  const files = [
-    ...srcVueFiles,
-    ...vuelessVueFiles,
-    ...vuelessJsConfigFiles,
-  ];
+  const files = [...srcVueFiles, ...vuelessVueFiles, ...vuelessJsConfigFiles];
 
   /* Generate safelist */
   COMPONENTS_WITH_COLOR_PROP.forEach((component) => {
-    const { colors, isExistsComponent } = findColors(files, component);
+    let { colors, isExistsComponent } =
+      mode === "storybook"
+        ? { colors: brandColors, isExistsComponent: true }
+        : findColors(files, component);
 
     if (isExistsComponent && colors.length) {
       // eslint-disable-next-line vue/max-len, prettier/prettier
@@ -87,6 +91,11 @@ export function createTailwindSafelist() {
   });
 
   process.env.SAFELIST_JSON = JSON.stringify(safelist);
+
+  if (isDebug) {
+    // eslint-disable-next-line no-console
+    console.log("Generated safelist:", process.env.SAFELIST_JSON);
+  }
 }
 
 function getFiles(dirPath, extension, fileList) {

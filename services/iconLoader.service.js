@@ -11,32 +11,26 @@
 import fs from "fs";
 import path from "path";
 import { createRequire } from "node:module";
-
 import vuelessConfig from "../../../../vueless.config.js";
 
 const DESTINATION_DIR = "./src/assets/images/.generated";
-const DEFAULT_CONFIG_PATH = "node_modules/vueless/src/ui.image-icon/configs/default.config.js";
+const DEFAULT_CONFIG_PATH = "src/ui.image-icon/configs/default.config.js";
 const STORYBOOK_STORY_EXTENSION = ".stories.js";
 const U_ICON = "UIcon";
 
-const defaultVariants = getMergedConfig();
-const args = parseArgs();
-
 let isDebug = false;
-
-// run method manually
-if (args.run) {
-  copyIcons(args.mode);
-}
+let isVuelessEnv = false;
 
 // perform icons copy magick... ✨
-export function copyIcons(mode = "src", debug) {
+export function copyIcons(mode = "src", env, debug) {
   isDebug = debug || false;
+  isVuelessEnv = env === "vueless";
 
   removeIcons();
 
-  const vuelessVueFiles = getFiles("node_modules/vueless/src", ".vue");
-  const vuelessJsFiles = getFiles("node_modules/vueless/src", ".js");
+  const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless/src";
+  const vuelessVueFiles = getFiles(vuelessFilePath, ".vue");
+  const vuelessJsFiles = getFiles(vuelessFilePath, ".js");
 
   findAndCopyIcons([
     ...vuelessVueFiles,
@@ -54,7 +48,7 @@ export function copyIcons(mode = "src", debug) {
   }
 
   if (mode === "storybook" || mode === "all") {
-    const vuelessStoriesJsFiles = getFiles("node_modules/vueless/src", STORYBOOK_STORY_EXTENSION);
+    const vuelessStoriesJsFiles = getFiles(vuelessFilePath, STORYBOOK_STORY_EXTENSION);
 
     findAndCopyIcons(vuelessStoriesJsFiles);
   }
@@ -71,6 +65,7 @@ export function removeIcons() {
 }
 
 function findAndCopyIcons(files) {
+  const defaultVariants = getMergedConfig();
   const safelistIcons = getSafelistIcons();
 
   safelistIcons.forEach((iconName) => {
@@ -166,6 +161,51 @@ function findAndCopyIcons(files) {
       }
     }
   });
+
+  function copyFile(name, fill) {
+    name = name.toLowerCase();
+    fill = Boolean(fill);
+
+    const library = defaultVariants.library;
+    const weight = defaultVariants.weight;
+    const style = defaultVariants.style;
+
+    const require = createRequire(import.meta.url);
+
+    /* eslint-disable prettier/prettier */
+    const libraries = {
+      "@material-symbols": {
+        source: `${library}/svg-${weight}/${style}/${name}${fill ? "-fill" : ""}.svg`,
+        destination: `${DESTINATION_DIR}/${library}/svg-${weight}/${style}/${name}${fill ? "-fill" : ""}.svg`,
+      },
+      "bootstrap-icons": {
+        source: `${library}/icons/${name}${fill ? "-fill" : ""}.svg`,
+        destination: `${DESTINATION_DIR}/${library}/icons/${name}${fill ? "-fill" : ""}.svg`,
+      },
+      heroicons: {
+        source: `${library}/${style}/${fill ? "solid" : "outline"}/${name}.svg`,
+        destination: `${DESTINATION_DIR}/${library}/${style}/${fill ? "solid" : "outline"}/${name}.svg`,
+      },
+    };
+    /* eslint-enable prettier/prettier */
+
+    const { source, destination } = libraries[library];
+
+    if (fs.existsSync(destination)) {
+      return;
+    }
+
+    const destDir = path.dirname(destination);
+
+    fs.mkdirSync(destDir, { recursive: true });
+    fs.copyFile(require.resolve(source), destination, (err) => {
+      if (isDebug) {
+        err
+          ? console.error(`Error copying icon "${name}":`, err)
+          : console.log(`Icon "${name}" copied successfully!`);
+      }
+    });
+  }
 }
 
 function getFiles(dirPath, extension, fileList) {
@@ -192,86 +232,20 @@ function getFiles(dirPath, extension, fileList) {
   return fileList;
 }
 
-function copyFile(name, fill) {
-  name = name.toLowerCase();
-  fill = Boolean(fill);
-
-  const library = defaultVariants.library;
-  const weight = defaultVariants.weight;
-  const style = defaultVariants.style;
-
-  const require = createRequire(import.meta.url);
-
-  /* eslint-disable prettier/prettier */
-  const libraries = {
-    "@material-symbols": {
-      source: `${library}/svg-${weight}/${style}/${name}${fill ? "-fill" : ""}.svg`,
-      destination: `${DESTINATION_DIR}/${library}/svg-${weight}/${style}/${name}${fill ? "-fill" : ""}.svg`,
-    },
-    "bootstrap-icons": {
-      source: `${library}/icons/${name}${fill ? "-fill" : ""}.svg`,
-      destination: `${DESTINATION_DIR}/${library}/icons/${name}${fill ? "-fill" : ""}.svg`,
-    },
-    heroicons: {
-      source: `${library}/${style}/${fill ? "solid" : "outline"}/${name}.svg`,
-      destination: `${DESTINATION_DIR}/${library}/${style}/${fill ? "solid" : "outline"}/${name}.svg`,
-    },
-  };
-  /* eslint-enable prettier/prettier */
-
-  const { source, destination } = libraries[library];
-
-  if (fs.existsSync(destination)) {
-    return;
-  }
-
-  const destDir = path.dirname(destination);
-
-  fs.mkdirSync(destDir, { recursive: true });
-  fs.copyFile(require.resolve(source), destination, (err) => {
-    if (args.debug || isDebug) {
-      err
-        ? console.error(`Error copying icon "${name}":`, err)
-        : console.log(`Icon "${name}" copied successfully!`);
-    }
-  });
-}
-
-function parseArgs() {
-  const args = process.argv.slice(2);
-  const parsedArgs = {};
-
-  let currentKey = null;
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-
-    if (arg.startsWith("--")) {
-      const key = arg.slice(2);
-
-      parsedArgs[key] = true;
-      currentKey = key;
-    } else if (currentKey) {
-      parsedArgs[currentKey] = arg;
-      currentKey = null;
-    }
-  }
-
-  return parsedArgs;
-}
-
 function getSafelistIcons() {
   return vuelessConfig.component ? vuelessConfig.component[U_ICON]?.safelistIcons || [] : [];
 }
 
 function getMergedConfig() {
-  if (fs.existsSync(DEFAULT_CONFIG_PATH)) {
-    const defaultConfigFile = fs.readFileSync(DEFAULT_CONFIG_PATH).toString();
+  const defaultConfigPath = (isVuelessEnv ? "" : "node_modules/vueless/") + DEFAULT_CONFIG_PATH;
+
+  if (fs.existsSync(defaultConfigPath)) {
+    const defaultConfigFile = fs.readFileSync(defaultConfigPath).toString();
 
     const defaultConfig = getDefaultConfigJson(defaultConfigFile);
-    const globalConfig = vuelessConfig.component || {};
+    const globalConfig = vuelessConfig.component && vuelessConfig.component[U_ICON];
 
-    return merge(globalConfig[U_ICON]?.defaultVariants, defaultConfig.defaultVariants);
+    return merge(globalConfig?.defaultVariants || {}, defaultConfig.defaultVariants);
   }
 }
 
@@ -286,11 +260,12 @@ function getDefaultConfigJson(fileContents) {
 function merge(source, target) {
   for (const [key, val] of Object.entries(source)) {
     if (val !== null && typeof val === `object`) {
-      target[key] ??=new val.__proto__.constructor();
+      target[key] ??= new val.__proto__.constructor();
       merge(val, target[key]);
     } else {
       target[key] = val;
     }
   }
+
   return target; // we're replacing in-situ, so this is more for chaining than anything else
 }
