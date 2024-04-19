@@ -90,6 +90,6 @@ export default function (componentName) {
   const componentFolder = components[componentName];
 
   if (componentFolder) {
-    return { from: `vueless/src/${componentFolder}` };
+    return { from: `vueless/${componentFolder}` };
   }
 }

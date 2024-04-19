@@ -55,7 +55,7 @@ export function createTailwindSafelist(mode, env, debug) {
 
   const safelist = [];
   const isVuelessEnv = env === "vueless";
-  const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless/src";
+  const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless";
 
   const srcVueFiles = isVuelessEnv ? [] : getFiles("src", ".vue");
   const vuelessVueFiles = getFiles(vuelessFilePath, ".vue");

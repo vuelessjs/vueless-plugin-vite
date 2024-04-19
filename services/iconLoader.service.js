@@ -14,7 +14,7 @@ import { createRequire } from "node:module";
 import vuelessConfig from "../../../../vueless.config.js";
 
 const DESTINATION_DIR = "./src/assets/images/.generated";
-const DEFAULT_CONFIG_PATH = "src/ui.image-icon/configs/default.config.js";
+const DEFAULT_CONFIG_PATH = "ui.image-icon/configs/default.config.js";
 const STORYBOOK_STORY_EXTENSION = ".stories.js";
 const U_ICON = "UIcon";
 
@@ -28,7 +28,7 @@ export function copyIcons(mode = "src", env, debug) {
 
   removeIcons();
 
-  const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless/src";
+  const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless";
   const vuelessVueFiles = getFiles(vuelessFilePath, ".vue");
   const vuelessJsFiles = getFiles(vuelessFilePath, ".js");
 
@@ -237,7 +237,7 @@ function getSafelistIcons() {
 }
 
 function getMergedConfig() {
-  const defaultConfigPath = (isVuelessEnv ? "" : "node_modules/vueless/") + DEFAULT_CONFIG_PATH;
+  const defaultConfigPath = (isVuelessEnv ? "src/" : "node_modules/vueless/") + DEFAULT_CONFIG_PATH;
 
   if (fs.existsSync(defaultConfigPath)) {
     const defaultConfigFile = fs.readFileSync(defaultConfigPath).toString();
