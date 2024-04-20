@@ -1,6 +1,6 @@
 {
   "name": "@vueless/vite-plugin",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Vite plugin which extends Vueless UI library functionality.",
   "homepage": "https://vueless.com",
   "author": "Johnny Grid",
