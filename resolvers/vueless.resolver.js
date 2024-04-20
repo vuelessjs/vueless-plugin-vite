@@ -84,6 +84,7 @@ export const components = {
   /* Other */
   UDot: "ui.other-dot",
   ULoader: "ui.other-loader",
+  ULoaderTop: "ui.other-loader-top",
 };
 
 export default function (componentName) {
