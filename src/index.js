@@ -2,10 +2,10 @@
 
 import UnpluginVueComponents from "unplugin-vue-components/vite";
 
-import { createTailwindSafelist } from "./src/services/tailwindSafelist.service.js";
-import { copyIcons, removeIcons } from "./src/services/iconLoader.service.js";
-import { loadSvg } from "./src/services/svgLoader.service.js";
-import vuelessResolver from "./src/resolvers/vueless.resolver.js";
+import { createTailwindSafelist } from "./services/tailwindSafelist.service.js";
+import { copyIcons, removeIcons } from "./services/iconLoader.service.js";
+import { loadSvg } from "./services/svgLoader.service.js";
+import vuelessResolver from "./resolvers/vueless.resolver.js";
 
 /* Automatically importing Vueless components on demand */
 export const VuelessUnpluginComponents = (options) =>
