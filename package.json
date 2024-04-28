@@ -1,7 +1,7 @@
 {
   "name": "@vueless/plugin-vite",
   "version": "0.0.1",
-  "description": "Vite plugin which extends Vueless UI library functionality.",
+  "description": "Vite plugin for Vueless UI library.",
   "homepage": "https://vueless.com",
   "author": "Johnny Grid",
   "license": "MIT",
@@ -12,18 +12,16 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vuelessjs/vite-plugin-vueless.git"
-  },
-  "bugs": {
-    "url": "https://github.com/vuelessjs/vite-plugin-vueless/issues"
-  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint --ext .vue,.js,.ts --no-fix --ignore-path .eslintignore src/",
+    "lint:fix": "eslint --ext .vue,.js,.ts --fix --ignore-path .eslintignore src/",
+    "lint:ci": "eslint --ext .vue,.js,.ts --no-fix --ignore-path .eslintignore --max-warnings=0",
+    "release:patch": "release-it patch --ci --npm.publish",
+    "release:minor": "release-it minor --ci --npm.publish --git.tag --github.release",
+    "release:major": "release-it major --ci --npm.publish --git.tag --github.release",
+    "package:prepare": "rm -rf dist && mkdir -p dist && cp -r src/* package.json LICENSE README.md dist/"
   },
   "dependencies": {
-    "@vue/compiler-sfc": "^3.4.19",
     "svgo": "^3.2.0",
     "unplugin-vue-components": "^0.26.0"
   },
@@ -33,6 +31,14 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.1.3",
     "prettier": "^3.2.5",
-    "prettier-eslint": "^16.3.0"
+    "prettier-eslint": "^16.3.0",
+    "release-it": "^17.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vuelessjs/vite-plugin-vueless.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vuelessjs/vite-plugin-vueless/issues"
   }
 }
