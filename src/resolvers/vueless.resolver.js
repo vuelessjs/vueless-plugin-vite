@@ -87,10 +87,20 @@ export const components = {
   ULoaderTop: "ui.other-loader-top",
 };
 
-export default function (componentName) {
+export function componentResolver(componentName) {
   const componentFolder = components[componentName];
 
   if (componentFolder) {
     return { from: `vueless/${componentFolder}` };
   }
 }
+
+export const directiveResolver = {
+  type: "directive",
+  resolve(name) {
+    const folderName = name.charAt(0).toLowerCase() + name.slice(1);
+    return {
+        from: `vueless/directive.${folderName}`
+    };
+  }
+};
