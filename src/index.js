@@ -5,12 +5,12 @@ import UnpluginVueComponents from "unplugin-vue-components/vite";
 import { createTailwindSafelist } from "./services/tailwindSafelist.service.js";
 import { copyIcons, removeIcons } from "./services/iconLoader.service.js";
 import { loadSvg } from "./services/svgLoader.service.js";
-import vuelessResolver from "./resolvers/vueless.resolver.js";
+import { componentResolver, directiveResolver } from "./resolvers/vueless.resolver.js";
 
 /* Automatically importing Vueless components on demand */
 export const VuelessUnpluginComponents = (options) =>
   UnpluginVueComponents({
-    resolvers: [vuelessResolver],
+    resolvers: [componentResolver, directiveResolver],
     dts: false,
     ...options,
   });
