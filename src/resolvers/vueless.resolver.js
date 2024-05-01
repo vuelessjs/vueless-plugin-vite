@@ -81,10 +81,13 @@ export const components = {
   UStepper: "ui.navigation-stepper",
   UPagination: "ui.navigation-pagination",
 
+  /* Loaders and Skeletons */
+  ULoader: "ui.loader",
+  ULoaderTop: "ui.loader-top",
+  ULoaderRendering: "ui.loader-rendering",
+
   /* Other */
   UDot: "ui.other-dot",
-  ULoader: "ui.other-loader",
-  ULoaderTop: "ui.other-loader-top",
 };
 
 export function componentResolver(componentName) {
