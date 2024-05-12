@@ -4,7 +4,7 @@ import path from "path";
 import vuelessConfig from "../../../../vueless.config.js";
 import { components } from "../resolvers/vueless.resolver.js";
 
-const brandColors = [
+const BRAND_COLORS = [
   "brand",
   "red",
   "orange",
@@ -67,7 +67,7 @@ export function createTailwindSafelist(mode, env, debug) {
   COMPONENTS_WITH_COLOR_PROP.forEach((component) => {
     let { colors, isExistsComponent } =
       mode === "storybook"
-        ? { colors: brandColors, isExistsComponent: true }
+        ? { colors: BRAND_COLORS, isExistsComponent: true }
         : findColors(files, component);
 
     if (isExistsComponent && colors.length) {
@@ -125,8 +125,8 @@ function findColors(files, component) {
     colors.push(brandColor);
   }
 
-  if (!brandColors.includes("gray")) {
-    brandColors.push("gray");
+  if (!BRAND_COLORS.includes("gray")) {
+    BRAND_COLORS.push("gray");
   }
 
   /* Add safelist colors from config */
@@ -187,7 +187,7 @@ function findColors(files, component) {
 }
 
 function addColor(color, colors) {
-  if (brandColors.includes(color) && !colors.includes(color)) {
+  if (BRAND_COLORS.includes(color) && !colors.includes(color)) {
     colors.push(color);
   }
 }
