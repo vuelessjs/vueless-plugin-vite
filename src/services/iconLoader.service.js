@@ -1,7 +1,7 @@
 /**
  This scrypt find icon names from the UIcon props and objects across the project
  and copy SVG icons from the default icons library (@material-symbols or other from config)
- to the ".../.cache" folder.
+ to the ".../cache" folder.
 
  Those icons will be used only in the build stage.
  The script is needed to avoid all @material-symbols icons set in the project bundle.
@@ -14,8 +14,8 @@ import { createRequire } from "node:module";
 import vuelessConfig from "../../../../vueless.config.js";
 
 const DEFAULT_ICONS_DIR = "./src/assets/icons";
-const VUELESS_ICONS_DIR = "./src/assets/icons/.cache";
-const PROJECT_ICONS_DIR = "./node_modules/vueless/assets/icons/.cache";
+const VUELESS_ICONS_DIR = "./src/assets/icons/cache";
+const PROJECT_ICONS_DIR = "./node_modules/vueless/assets/icons/cache";
 const DEFAULT_CONFIG_PATH = "ui.image-icon/configs/default.config.js";
 const STORYBOOK_STORY_EXTENSION = ".stories.js";
 const ICON_COMPONENT_NAME = "UIcon";
@@ -99,20 +99,24 @@ function findAndCopyIcons(files) {
     }
 
     /* UIcon */
-    const regexName = /\bname\s*=\s*(['"])(.*?)\1/g;
-    const matchNameArray = fileContents.match(/<UIcon[^>]+>/g);
+    const uIconNameRegex = /\bname\s*=\s*(['"])(.*?)\1/g;
+    const uIconMatchNameArray = fileContents.match(/<UIcon[^>]+>/g);
 
     function getTernaryValues(expression) {
-      const [, values] = expression.replace(/\s/g, "").split("?");
-      const [trueValue, falseValue] = values.split(":");
-      const clear = (value) => value.replace(/['"]/g, "");
+      const [, values] = expression
+        .replace(/\s/g, "") // newlines and spaces
+        .replace(/\?\./g, "") // conditional chaining `?.`
+        .replace(/['"]/g, "") // single and double quotes
+        .split("?");
 
-      return [clear(trueValue), clear(falseValue)];
+      const [trueValue, falseValue] = values.split(":");
+
+      return [trueValue, falseValue];
     }
 
-    if (matchNameArray) {
-      for (const match of matchNameArray) {
-        const iconNameMatch = regexName.exec(match);
+    if (uIconMatchNameArray) {
+      for (const match of uIconMatchNameArray) {
+        const iconNameMatch = uIconNameRegex.exec(match);
         const iconName = iconNameMatch ? iconNameMatch[2] : null;
 
         try {
@@ -129,6 +133,8 @@ function findAndCopyIcons(files) {
         } catch (error) {
           // console.log(error);
         }
+
+        uIconNameRegex.lastIndex = 0;
       }
     }
   });
