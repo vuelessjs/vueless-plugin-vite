@@ -142,29 +142,28 @@ function findAndCopyIcons(files) {
   function copyFile(name) {
     name = name.toLowerCase();
 
-    let library = defaultVariants.library;
-    const weight = defaultVariants.weight;
+    const library = defaultVariants.library;
     const style = defaultVariants.style;
 
     const require = createRequire(import.meta.url);
 
     /* eslint-disable prettier/prettier */
     const libraries = {
-      "vueless": { // @material-symbols icons which used across the components.
-        source: `${library}/svg-${weight}/${style}/${name}.svg`,
+      "vueless": { // @material-symbols/svg-500 icons which used across the components.
+        source: `${library}/${style}/${name}.svg`,
         destination: `${iconCacheDir}/${name}.svg`,
       },
-      "@material-symbols": {
-        source: `${library}/svg-${weight}/${style}/${name}.svg`,
-        destination: `${iconCacheDir}/${library}/svg-${weight}/${style}/${name}.svg`,
+      "@material-symbols/svg-500": {
+        source: `${library}/${style}/${name}.svg`,
+        destination: `${iconCacheDir}/${library}/${style}/${name}.svg`,
       },
       "bootstrap-icons": {
         source: `${library}/icons/${name}.svg`,
         destination: `${iconCacheDir}/${library}/icons/${name}.svg`,
       },
-      heroicons: {
-        source: `${library}/${style}/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
-        destination: `${iconCacheDir}/${library}/${style}/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
+      "heroicons": {
+        source: `${library}/24/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
+        destination: `${iconCacheDir}/24/${style}/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
       },
     };
     /* eslint-enable prettier/prettier */
