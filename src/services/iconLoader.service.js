@@ -143,19 +143,20 @@ function findAndCopyIcons(files) {
     name = name.toLowerCase();
 
     const library = defaultVariants.library;
+    const weight = defaultVariants.weight;
     const style = defaultVariants.style;
 
     const require = createRequire(import.meta.url);
 
     /* eslint-disable prettier/prettier */
     const libraries = {
-      "vueless": { // @material-symbols/svg-500 icons which used across the components.
+      "vueless": { // @material-symbols icons which used across the components.
         source: `${library}/${style}/${name}.svg`,
         destination: `${iconCacheDir}/${name}.svg`,
       },
-      "@material-symbols/svg-500": {
-        source: `${library}/${style}/${name}.svg`,
-        destination: `${iconCacheDir}/${library}/${style}/${name}.svg`,
+      "@material-symbols": {
+        source: `${library}/svg-${weight}/${style}/${name}.svg`,
+        destination: `${iconCacheDir}/${library}/svg-${weight}/${style}/${name}.svg`,
       },
       "bootstrap-icons": {
         source: `${library}/icons/${name}.svg`,
