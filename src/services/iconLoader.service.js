@@ -1,7 +1,7 @@
 /**
  This scrypt find icon names from the UIcon props and objects across the project
  and copy SVG icons from the default icons library (@material-symbols or other from config)
- to the ".../.generated" folder.
+ to the ".../cache" folder.
 
  Those icons will be used only in the build stage.
  The script is needed to avoid all @material-symbols icons set in the project bundle.
@@ -13,54 +13,55 @@ import path from "path";
 import { createRequire } from "node:module";
 import vuelessConfig from "../../../../vueless.config.js";
 
-const DESTINATION_DIR = "./src/assets/images/.generated";
+const DEFAULT_ICONS_DIR = "./src/assets/icons";
+const VUELESS_ICONS_DIR = "./src/assets/icons/cache";
+const PROJECT_ICONS_DIR = "./node_modules/vueless/assets/icons/cache";
 const DEFAULT_CONFIG_PATH = "ui.image-icon/configs/default.config.js";
 const STORYBOOK_STORY_EXTENSION = ".stories.js";
-const U_ICON = "UIcon";
+const ICON_COMPONENT_NAME = "UIcon";
 
 let isDebug = false;
 let isVuelessEnv = false;
+let isDefaultMode = false;
+let isStorybookMode = false;
+let isVuelessIconsMode = false;
+let iconCacheDir = PROJECT_ICONS_DIR;
 
 // perform icons copy magick... ✨
-export function copyIcons(mode = "src", env, debug) {
+export function copyIcons(mode = "", env, debug) {
   isDebug = debug || false;
   isVuelessEnv = env === "vueless";
+  isDefaultMode = mode === "";
+  isStorybookMode = mode === "storybook";
+  isVuelessIconsMode = mode === "vuelessIcons";
+
+  if (isVuelessIconsMode && isVuelessEnv) iconCacheDir = DEFAULT_ICONS_DIR;
+  if (isStorybookMode && isVuelessEnv) iconCacheDir = VUELESS_ICONS_DIR;
 
   removeIcons();
 
-  const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless";
-  const vuelessVueFiles = getFiles(vuelessFilePath, ".vue");
-  const vuelessJsFiles = getFiles(vuelessFilePath, ".js");
-
-  findAndCopyIcons([
-    ...vuelessVueFiles,
-    ...vuelessJsFiles,
-    "vueless.config.js",
-    "vueless.config.ts",
-  ]);
-
-  if (mode === "src" || mode === "all") {
-    const srcVueFiles = getFiles("src", ".vue");
-    const srcJsFiles = getFiles("src", ".js");
-    const srcTsFiles = getFiles("src", ".ts");
-
-    findAndCopyIcons([...srcVueFiles, ...srcJsFiles, ...srcTsFiles]);
+  if (isStorybookMode) {
+    findAndCopyIcons([...getFiles("src", STORYBOOK_STORY_EXTENSION)]);
   }
 
-  if (mode === "storybook" || mode === "all") {
-    const vuelessStoriesJsFiles = getFiles(vuelessFilePath, STORYBOOK_STORY_EXTENSION);
-
-    findAndCopyIcons(vuelessStoriesJsFiles);
+  if (isVuelessIconsMode || isDefaultMode) {
+    findAndCopyIcons([
+      ...getFiles("src", ".vue"),
+      ...getFiles("src", ".js"),
+      ...getFiles("src", ".ts"),
+      "vueless.config.js",
+      "vueless.config.ts",
+    ]);
   }
 }
 
 export function removeIcons() {
-  if (fs.existsSync(DESTINATION_DIR)) {
-    fs.rmSync(DESTINATION_DIR, { recursive: true, force: true });
+  if (!fs.existsSync(iconCacheDir)) return;
 
-    if (isDebug) {
-      console.log("Dynamically copied icons was successfully removed.");
-    }
+  fs.rmSync(iconCacheDir, { recursive: true, force: true });
+
+  if (isDebug) {
+    console.log("Dynamically copied icons was successfully removed.");
   }
 }
 
@@ -77,94 +78,69 @@ function findAndCopyIcons(files) {
     const fileContents = fs.existsSync(file) ? fs.readFileSync(file).toString() : "";
 
     /* Objects across the project */
-    const objectRegExp = /(\{|[^{])[^}]*\b\w*icon\w*:\s*["']([^"']+)["'][^}]*}/gi;
-    const objectMatches = fileContents.match(objectRegExp);
+    const iconNameRegex = /\w*(icon)\w*:\s*["']([^"'\s]+)["']/gi;
+    const objectMatchNameArray = fileContents.match(iconNameRegex);
 
-    if (objectMatches) {
-      for (const match of objectMatches) {
-        const iconNameRegex = /\w*(icon)\w*:\s*["']([^"'\s]+)["']/gi;
+    if (objectMatchNameArray) {
+      for (const match of objectMatchNameArray) {
         const iconNameMatch = iconNameRegex.exec(match);
         const iconName = iconNameMatch && iconNameMatch[2];
 
-        const iconFillRegex = /\w*(fill)\w*:\s*(true|false)/gi;
-        const fillMatch = iconFillRegex.exec(match);
-        const fill = fillMatch ? fillMatch[2] : defaultVariants.fill;
-
         try {
           if (iconName) {
-            copyFile(iconName, fill);
+            copyFile(iconName);
           }
         } catch (error) {
           // console.log(error);
         }
 
         iconNameRegex.lastIndex = 0;
-        iconFillRegex.lastIndex = 0;
       }
     }
 
     /* UIcon */
-    const regexName = /\bname\s*=\s*["']([^"'\s]+)["']/;
-    const regexFill = /(:(fill)="([^"]*)"|fill)/;
+    const uIconNameRegex = /\bname\s*=\s*(['"])(.*?)\1/g;
+    const uIconMatchNameArray = fileContents.match(/<UIcon[^>]+>/g);
 
-    const matchNameArray = fileContents.match(/<UIcon[^>]+>/g);
+    function getTernaryValues(expression) {
+      const [, values] = expression
+        .replace(/\s/g, "") // newlines and spaces
+        .replace(/\?\./g, "") // conditional chaining `?.`
+        .replace(/['"]/g, "") // single and double quotes
+        .split("?");
 
-    if (matchNameArray) {
-      for (const match of matchNameArray) {
-        const iconNameMatch = regexName.exec(match);
-        const iconFillMatch = regexFill.exec(match);
+      const [trueValue, falseValue] = values.split(":");
 
-        const iconName = iconNameMatch ? iconNameMatch[1] : null;
-        const fill = iconFillMatch ? iconFillMatch[1] : defaultVariants.fill;
-
-        try {
-          if (iconName) {
-            if (iconFillMatch && iconFillMatch[3]) {
-              copyFile(iconName, false);
-              copyFile(iconName, true);
-            } else {
-              copyFile(iconName, fill);
-            }
-          }
-        } catch (error) {
-          // console.log(error);
-        }
-      }
+      return [trueValue, falseValue];
     }
 
-    /* UIcon with ternary operator */
-    const ternaryRegexName = /\bname="[^']*'([^']*)'\s*:\s*'([^']*)'/;
-    const ternaryRegexFill = /(:(fill)="([^"]*)"|fill)/;
-
-    const ternaryMatchNameArray = fileContents.match(/<UIcon[^>]+>/g);
-
-    if (ternaryMatchNameArray) {
-      for (const match of ternaryMatchNameArray) {
-        const iconNameMatch = ternaryRegexName.exec(match);
-        const iconFillMatch = ternaryRegexFill.exec(match);
-
-        const fill = iconFillMatch ? iconFillMatch[1] : defaultVariants.fill;
+    if (uIconMatchNameArray) {
+      for (const match of uIconMatchNameArray) {
+        const iconNameMatch = uIconNameRegex.exec(match);
+        const iconName = iconNameMatch ? iconNameMatch[2] : null;
 
         try {
-          if (iconFillMatch && iconFillMatch[3]) {
-            copyFile(iconNameMatch[1], false);
-            copyFile(iconNameMatch[2], true);
-            copyFile(iconNameMatch[1], false);
-            copyFile(iconNameMatch[2], true);
+          if (!iconName) return;
+
+          if (iconName?.includes("?")) {
+            const [trueName, falseName] = getTernaryValues(iconName);
+
+            copyFile(trueName);
+            copyFile(falseName);
           } else {
-            copyFile(iconNameMatch[1], fill);
-            copyFile(iconNameMatch[2], fill);
+            copyFile(iconName);
           }
         } catch (error) {
           // console.log(error);
         }
+
+        uIconNameRegex.lastIndex = 0;
       }
     }
   });
 
-  function copyFile(name, fill) {
+  function copyFile(name) {
     name = name.toLowerCase();
-    fill = Boolean(fill);
 
     const library = defaultVariants.library;
     const weight = defaultVariants.weight;
@@ -174,34 +150,37 @@ function findAndCopyIcons(files) {
 
     /* eslint-disable prettier/prettier */
     const libraries = {
+      "vueless": { // @material-symbols icons which used across the components.
+        source: `${library}/${style}/${name}.svg`,
+        destination: `${iconCacheDir}/${name}.svg`,
+      },
       "@material-symbols": {
-        source: `${library}/svg-${weight}/${style}/${name}${fill ? "-fill" : ""}.svg`,
-        destination: `${DESTINATION_DIR}/${library}/svg-${weight}/${style}/${name}${fill ? "-fill" : ""}.svg`,
+        source: `${library}/svg-${weight}/${style}/${name}.svg`,
+        destination: `${iconCacheDir}/${library}/svg-${weight}/${style}/${name}.svg`,
       },
       "bootstrap-icons": {
-        source: `${library}/icons/${name}${fill ? "-fill" : ""}.svg`,
-        destination: `${DESTINATION_DIR}/${library}/icons/${name}${fill ? "-fill" : ""}.svg`,
+        source: `${library}/icons/${name}.svg`,
+        destination: `${iconCacheDir}/${library}/icons/${name}.svg`,
       },
-      heroicons: {
-        source: `${library}/${style}/${fill ? "solid" : "outline"}/${name}.svg`,
-        destination: `${DESTINATION_DIR}/${library}/${style}/${fill ? "solid" : "outline"}/${name}.svg`,
+      "heroicons": {
+        source: `${library}/24/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
+        destination: `${iconCacheDir}/24/${style}/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
       },
     };
     /* eslint-enable prettier/prettier */
 
-    const { source, destination } = libraries[library];
+    const { source, destination } =
+      libraries[isVuelessIconsMode && isVuelessEnv ? "vueless" : library];
 
-    if (fs.existsSync(destination)) {
-      return;
-    }
+    if (fs.existsSync(destination)) return;
 
     const destDir = path.dirname(destination);
 
     fs.mkdirSync(destDir, { recursive: true });
-    fs.copyFile(require.resolve(source), destination, (err) => {
+    fs.copyFile(require.resolve(source), destination, (error) => {
       if (isDebug) {
-        err
-          ? console.error(`Error copying icon "${name}":`, err)
+        error
+          ? console.error(`Error copying icon "${name}":`, error)
           : console.log(`Icon "${name}" copied successfully!`);
       }
     });
@@ -233,7 +212,9 @@ function getFiles(dirPath, extension, fileList) {
 }
 
 function getSafelistIcons() {
-  return vuelessConfig.component ? vuelessConfig.component[U_ICON]?.safelistIcons || [] : [];
+  return vuelessConfig.component
+    ? vuelessConfig.component[ICON_COMPONENT_NAME]?.safelistIcons || []
+    : [];
 }
 
 function getMergedConfig() {
@@ -243,7 +224,7 @@ function getMergedConfig() {
     const defaultConfigFile = fs.readFileSync(defaultConfigPath).toString();
 
     const defaultConfig = getDefaultConfigJson(defaultConfigFile);
-    const globalConfig = vuelessConfig.component && vuelessConfig.component[U_ICON];
+    const globalConfig = vuelessConfig.component && vuelessConfig.component[ICON_COMPONENT_NAME];
 
     return merge(globalConfig?.defaultVariants || {}, defaultConfig.defaultVariants);
   }

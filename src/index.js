@@ -42,6 +42,7 @@ export const Vueless = function (options = {}) {
         /* collect used in project colors for tailwind safelist */
         createTailwindSafelist(options.mode, options.env, options.debug);
         /* dynamically copy used icons before build */
+        copyIcons("vuelessIcons", options.env, options.debug);
         copyIcons(options.mode, options.env, options.debug);
       }
 
