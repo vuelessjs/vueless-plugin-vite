@@ -88,6 +88,9 @@ export const components = {
 
   /* Other */
   UDot: "ui.other-dot",
+  ULoader: "ui.other-loader",
+  ULoaderTop: "ui.other-loader-top",
+  UProgress: "ui.progress",
 };
 
 export function componentResolver(componentName) {
