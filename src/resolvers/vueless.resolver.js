@@ -48,6 +48,7 @@ export const components = {
   UHeader: "ui.text-header",
   UText: "ui.text-block",
   UAlert: "ui.text-alert",
+  UNotify: "ui.text-notify",
   UMoney: "ui.text-money",
   UFile: "ui.text-file",
   UFiles: "ui.text-files",
@@ -79,6 +80,7 @@ export const components = {
   UTab: "ui.navigation-tab",
   UTabs: "ui.navigation-tabs",
   UStepper: "ui.navigation-stepper",
+  UProgress: "ui.navigation-progress",
   UPagination: "ui.navigation-pagination",
 
   /* Loaders and Skeletons */
@@ -88,9 +90,6 @@ export const components = {
 
   /* Other */
   UDot: "ui.other-dot",
-  ULoader: "ui.other-loader",
-  ULoaderTop: "ui.other-loader-top",
-  UProgress: "ui.progress",
 };
 
 export function componentResolver(componentName) {
@@ -105,8 +104,9 @@ export const directiveResolver = {
   type: "directive",
   resolve(name) {
     const folderName = name.charAt(0).toLowerCase() + name.slice(1);
+
     return {
-        from: `vueless/directive.${folderName}`
+      from: `vueless/directive.${folderName}`,
     };
-  }
+  },
 };
