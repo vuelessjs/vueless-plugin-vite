@@ -151,7 +151,7 @@ function findAndCopyIcons(files) {
     /* eslint-disable prettier/prettier */
     const libraries = {
       "vueless": { // @material-symbols icons which used across the components.
-        source: `${library}/${style}/${name}.svg`,
+        source: `${library}/svg-${weight}/${style}/${name}.svg`,
         destination: `${iconCacheDir}/${name}.svg`,
       },
       "@material-symbols": {
