@@ -45,6 +45,7 @@ const COMPONENTS_WITH_COLOR_PROP = [
   "UBadge",
   "UModalConfirm",
   "UIcon",
+  "UAvatar",
   "UDot",
 ];
 
