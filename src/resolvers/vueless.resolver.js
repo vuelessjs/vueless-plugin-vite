@@ -12,7 +12,7 @@
 import { components } from "../constants/inxex.js";
 
 export function componentResolver(componentName) {
-  const { folder } = components[componentName];
+  const folder = components[componentName]?.folder;
 
   if (folder) {
     return { from: `vueless/${folder}` };
