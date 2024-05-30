@@ -24,7 +24,7 @@ module.exports = {
       { blankLine: "always", prev: "*", next: "block-like" },
       { blankLine: "always", prev: "*", next: "return" },
     ],
-    "prettier/prettier": ["warn", { printWidth: 100, tabWidth: 2 }],
+    "prettier/prettier": ["warn", { printWidth: 120, tabWidth: 2 }],
   },
   parserOptions: {
     module: "esnext",

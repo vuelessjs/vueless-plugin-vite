@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 import vuelessConfig from "../../../../vueless.config.js";
-import { components } from "../resolvers/vueless.resolver.js";
+import { components } from "../constants/inxex.js";
 
 const BRAND_COLORS = [
   "brand",
@@ -25,30 +25,6 @@ const BRAND_COLORS = [
   "rose",
 ];
 
-const COMPONENTS_WITH_COLOR_PROP = [
-  "UButton",
-  "ULink",
-  "UDropdownButton",
-  "UDropdownBadge",
-  "UDropdownLink",
-  "UCheckbox",
-  "UCheckboxGroup",
-  "UCheckboxMultiState",
-  "USwitch",
-  "URadio",
-  "URadioCard",
-  "URadioGroup",
-  "UHeader",
-  "UText",
-  "UAlert",
-  "UMoney",
-  "UBadge",
-  "UModalConfirm",
-  "UIcon",
-  "UAvatar",
-  "UDot",
-];
-
 let isDebug = false;
 
 export function createTailwindSafelist(mode, env, debug) {
@@ -64,32 +40,41 @@ export function createTailwindSafelist(mode, env, debug) {
 
   const files = [...srcVueFiles, ...vuelessVueFiles, ...vuelessJsConfigFiles];
 
+  const componentsWithSafelist = [];
+
+  Object.entries(components).forEach(([key, value]) => {
+    value.safelist && componentsWithSafelist.push({ name: key, safelist: value.safelist });
+  });
+
   /* Generate safelist */
-  COMPONENTS_WITH_COLOR_PROP.forEach((component) => {
-    let { colors, isExistsComponent } =
-      mode === "storybook"
-        ? { colors: BRAND_COLORS, isExistsComponent: true }
-        : findColors(files, component);
+  componentsWithSafelist.forEach((component) => {
+    const hasNestedComponents = Array.isArray(component.colorSafelist);
+    const storybookColors = { colors: BRAND_COLORS, isExistsComponent: true };
+
+    let { colors, isExistsComponent } = mode === "storybook" ? storybookColors : findColors(files, component.name);
 
     if (isExistsComponent && colors.length) {
-      // eslint-disable-next-line vue/max-len, prettier/prettier
-      const defaultConfigPath = vuelessJsConfigFiles.find((file) => checkDefaultConfig(file, component));
-
-      const defaultSafelist = getDefaultConfig(defaultConfigPath)?.safelist;
-      const customSafelist =
-        vuelessConfig.component && vuelessConfig.component[component]?.safelist;
-
-      const colorString = colors.join("|");
-
-      const selectedSafelist = customSafelist
-        ? customSafelist && customSafelist(colorString)
-        : defaultSafelist && defaultSafelist(colorString);
-
-      if (selectedSafelist) {
-        safelist.push(...selectedSafelist);
-      }
+      hasNestedComponents
+        ? component.safelist.forEach((nestedComponentName) => addToSafelist(nestedComponentName, colors))
+        : addToSafelist(component.name, colors);
     }
   });
+
+  function addToSafelist(component, colors) {
+    const defaultConfigPath = vuelessJsConfigFiles.find((file) => checkDefaultConfig(file, component));
+    const defaultSafelist = getDefaultConfig(defaultConfigPath)?.safelist;
+    const customSafelist = vuelessConfig.component && vuelessConfig.component[component]?.safelist;
+
+    const colorString = colors.join("|");
+
+    const selectedSafelist = customSafelist
+      ? customSafelist && customSafelist(colorString)
+      : defaultSafelist && defaultSafelist(colorString);
+
+    if (selectedSafelist) {
+      safelist.push(...selectedSafelist);
+    }
+  }
 
   process.env.SAFELIST_JSON = JSON.stringify(safelist);
 
@@ -195,8 +180,7 @@ function addColor(color, colors) {
 
 function getSafelistColorsFromConfig(component) {
   const globalSafelistColors = vuelessConfig.safelistColors || [];
-  const componentSafelistColors =
-    (vuelessConfig.component && vuelessConfig.component[component]?.safelistColors) || [];
+  const componentSafelistColors = (vuelessConfig.component && vuelessConfig.component[component]?.safelistColors) || [];
 
   return [...globalSafelistColors, ...componentSafelistColors];
 }
