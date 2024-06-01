@@ -9,7 +9,7 @@
  https://github.com/unplugin/unplugin-vue-components?tab=readme-ov-file#importing-from-ui-libraries
  */
 
-import { components } from "../constants/inxex.js";
+import { components } from "../constants/index.js";
 
 export function componentResolver(componentName) {
   const folder = components[componentName]?.folder;

@@ -10,8 +10,7 @@
 /* eslint-disable no-console */
 import fs from "fs";
 import path from "path";
-import { createRequire } from "node:module";
-import vuelessConfig from "../../../../vueless.config.js";
+import { createRequire } from "module";
 
 const DEFAULT_ICONS_DIR = "./src/assets/icons";
 const VUELESS_ICONS_DIR = "./src/assets/icons/cache";
@@ -26,6 +25,13 @@ let isDefaultMode = false;
 let isStorybookMode = false;
 let isVuelessIconsMode = false;
 let iconCacheDir = PROJECT_ICONS_DIR;
+let vuelessConfig = {};
+
+(async () => {
+  const module = await import(process.cwd() + "/vueless.config.js");
+
+  vuelessConfig = module.default;
+})();
 
 // perform icons copy magick... ✨
 export function copyIcons(mode = "", env, debug) {
@@ -169,8 +175,7 @@ function findAndCopyIcons(files) {
     };
     /* eslint-enable prettier/prettier */
 
-    const { source, destination } =
-      libraries[isVuelessIconsMode && isVuelessEnv ? "vueless" : library];
+    const { source, destination } = libraries[isVuelessIconsMode && isVuelessEnv ? "vueless" : library];
 
     if (fs.existsSync(destination)) return;
 
@@ -199,8 +204,7 @@ function getFiles(dirPath, extension, fileList) {
     if (stat.isDirectory()) {
       fileList = getFiles(filePath, extension, fileList);
     } else {
-      const isStorybookStory =
-        filePath.endsWith(STORYBOOK_STORY_EXTENSION) && extension !== STORYBOOK_STORY_EXTENSION;
+      const isStorybookStory = filePath.endsWith(STORYBOOK_STORY_EXTENSION) && extension !== STORYBOOK_STORY_EXTENSION;
 
       if (filePath.endsWith(extension) && !isStorybookStory) {
         fileList.push(filePath);
@@ -212,9 +216,7 @@ function getFiles(dirPath, extension, fileList) {
 }
 
 function getSafelistIcons() {
-  return vuelessConfig.component
-    ? vuelessConfig.component[ICON_COMPONENT_NAME]?.safelistIcons || []
-    : [];
+  return vuelessConfig.component ? vuelessConfig.component[ICON_COMPONENT_NAME]?.safelistIcons || [] : [];
 }
 
 function getMergedConfig() {

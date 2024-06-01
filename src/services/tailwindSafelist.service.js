@@ -1,8 +1,11 @@
 import fs from "fs";
 import path from "path";
+import { components } from "../constants/index.js";
 
-import vuelessConfig from "../../../../vueless.config.js";
-import { components } from "../constants/inxex.js";
+/* Load Vueless config from the project root. */
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const { default: vuelessConfig } = require(process.cwd() + "/vueless.config.js");
 
 const BRAND_COLORS = [
   "brand",
