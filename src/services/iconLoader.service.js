@@ -12,6 +12,9 @@ import fs from "fs";
 import path from "path";
 import { createRequire } from "module";
 
+/* Load Vueless config from the project root. */
+const { default: vuelessConfig } = await import(process.cwd() + "/vueless.config.js");
+
 const DEFAULT_ICONS_DIR = "./src/assets/icons";
 const VUELESS_ICONS_DIR = "./src/assets/icons/cache";
 const PROJECT_ICONS_DIR = "./node_modules/vueless/assets/icons/cache";
@@ -25,13 +28,6 @@ let isDefaultMode = false;
 let isStorybookMode = false;
 let isVuelessIconsMode = false;
 let iconCacheDir = PROJECT_ICONS_DIR;
-let vuelessConfig = {};
-
-(async () => {
-  const module = await import(process.cwd() + "/vueless.config.js");
-
-  vuelessConfig = module.default;
-})();
 
 // perform icons copy magick... ✨
 export function copyIcons(mode = "", env, debug) {
