@@ -5,6 +5,8 @@ import { components } from "../constants/index.js";
 /* Load Vueless config from the project root. */
 const { default: vuelessConfig } = await import(process.cwd() + "/vueless.config.js");
 
+process.env.VUELESS_CONFIG_JSON = JSON.stringify(vuelessConfig);
+
 const BRAND_COLORS = [
   "brand",
   "red",
@@ -77,7 +79,7 @@ export function createTailwindSafelist(mode, env, debug) {
     }
   }
 
-  process.env.SAFELIST_JSON = JSON.stringify(safelist);
+  process.env.VUELESS_SAFELIST_JSON = JSON.stringify(safelist);
 
   if (isDebug) {
     // eslint-disable-next-line no-console
