@@ -1,4 +1,4 @@
-import resolveConfig from "tailwindcss/resolveConfig";
+import resolveConfig from "tailwindcss/resolveConfig.js";
 
 /* Load Vueless and Tailwind config from the project root. */
 const { default: vuelessConfig } = await import(process.cwd() + "/vueless.config.js");
