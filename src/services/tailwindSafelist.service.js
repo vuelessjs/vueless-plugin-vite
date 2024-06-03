@@ -77,7 +77,7 @@ export function createTailwindSafelist(mode, env, debug) {
     }
   }
 
-  process.env.VUELESS_SAFELIST_JSON = JSON.stringify(safelist);
+  process.env.VUELESS_SAFELIST = JSON.stringify(safelist);
 
   if (isDebug) {
     // eslint-disable-next-line no-console

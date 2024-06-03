@@ -7,8 +7,9 @@ const { default: tailwindConfig } = await import(process.cwd() + "/tailwind.conf
 export function saveConfigsToEnv() {
   const fullConfig = resolveConfig(tailwindConfig);
   const { colors } = fullConfig.theme;
+  const { brand, gray } = vuelessConfig;
 
-  /* Save values into the env variables. */
-  process.env.VUELESS_CONFIG_JSON = JSON.stringify(vuelessConfig);
-  process.env.VUELESS_TAILWIND_COLORS_CONFIG_JSON = JSON.stringify(colors);
+  /* Save values into the env variables (for vueless tailwind preset). */
+  process.env.VUELESS_CONFIG_COLORS = JSON.stringify({ brand, gray });
+  process.env.VUELESS_TAILWIND_CONFIG_COLORS = JSON.stringify(colors);
 }
