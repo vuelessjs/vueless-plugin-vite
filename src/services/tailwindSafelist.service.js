@@ -5,8 +5,6 @@ import { components } from "../constants/index.js";
 /* Load Vueless config from the project root. */
 const { default: vuelessConfig } = await import(process.cwd() + "/vueless.config.js");
 
-process.env.VUELESS_CONFIG_JSON = JSON.stringify(vuelessConfig);
-
 const BRAND_COLORS = [
   "brand",
   "red",

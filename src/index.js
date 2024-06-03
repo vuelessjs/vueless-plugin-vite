@@ -2,6 +2,7 @@
 
 import UnpluginVueComponents from "unplugin-vue-components/vite";
 
+import { saveConfigsToEnv } from "./services/common.service.js";
 import { createTailwindSafelist } from "./services/tailwindSafelist.service.js";
 import { copyIcons, removeIcons } from "./services/iconLoader.service.js";
 import { loadSvg } from "./services/svgLoader.service.js";
@@ -35,9 +36,18 @@ export const Vueless = function (options = {}) {
       define: {
         "process.env": {},
       },
+      optimizeDeps: {
+        include: ["@tailwindcss/forms"],
+      },
+      resolve: {
+        extensions: [".vue", ".mjs", ".js", ".ts", ".mdx"],
+      },
     }),
 
     configResolved: (config) => {
+      /* save vueless and tailwind configs into env variables (it needs for vueless tailwind preset) */
+      saveConfigsToEnv();
+
       if (config.command === "build") {
         /* collect used in project colors for tailwind safelist */
         createTailwindSafelist(options.mode, options.env, options.debug);
