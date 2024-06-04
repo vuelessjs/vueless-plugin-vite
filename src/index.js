@@ -37,7 +37,7 @@ export const Vueless = function (options = {}) {
         "process.env": {},
       },
       optimizeDeps: {
-        include: [],
+        include: ["tailwindcss/colors"],
       },
       resolve: {
         extensions: [".vue", ".mjs", ".js", ".ts", ".mdx"],
