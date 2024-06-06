@@ -38,7 +38,7 @@ export const components = {
   UHeader: { folder: "ui.text-header", safelist: true },
   UText: { folder: "ui.text-block" },
   UAlert: { folder: "ui.text-alert", safelist: ["UIcon"] },
-  UNotify: { folder: "ui.text-notify" },
+  UNotify: { folder: "ui.text-notify", safelist: ["UIcon"] },
   UMoney: { folder: "ui.text-money", safelist: true },
   UFile: { folder: "ui.text-file" },
   UFiles: { folder: "ui.text-files" },
