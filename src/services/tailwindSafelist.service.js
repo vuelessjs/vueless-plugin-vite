@@ -49,7 +49,7 @@ export function createTailwindSafelist(mode, env, debug) {
 
   /* Generate safelist */
   componentsWithSafelist.forEach((component) => {
-    const hasNestedComponents = Array.isArray(component.colorSafelist);
+    const hasNestedComponents = Array.isArray(component.safelist);
     const storybookColors = { colors: BRAND_COLORS, isExistsComponent: true };
 
     let { colors, isExistsComponent } = mode === "storybook" ? storybookColors : findColors(files, component.name);
@@ -193,7 +193,7 @@ function getBrandColor(component) {
 }
 
 function checkDefaultConfig(filePath, component) {
-  return filePath.includes(components[component]) && filePath.endsWith("default.config.js");
+  return filePath.includes(components[component].folder) && filePath.endsWith("default.config.js");
 }
 
 function getDefaultConfig(path) {
