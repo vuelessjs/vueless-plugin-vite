@@ -2,7 +2,7 @@
 
 import UnpluginVueComponents from "unplugin-vue-components/vite";
 
-import { saveConfigsToEnv } from "./services/common.service.js";
+import { addWebTypesToPackageJson, saveConfigsToEnv } from "./services/common.service.js";
 import { createTailwindSafelist } from "./services/tailwindSafelist.service.js";
 import { copyIcons, removeIcons } from "./services/iconLoader.service.js";
 import { loadSvg } from "./services/svgLoader.service.js";
@@ -59,6 +59,9 @@ export const Vueless = function (options = {}) {
       if (config.command === "dev" || config.command === "serve") {
         /* remove dynamically copied icons on dev server start */
         removeIcons(options.debug);
+
+        /* add web-types config to the package.json */
+        addWebTypesToPackageJson(options.env, options.debug);
       }
     },
 
