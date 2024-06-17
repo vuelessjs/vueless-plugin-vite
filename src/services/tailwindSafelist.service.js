@@ -7,6 +7,7 @@ const { default: vuelessConfig } = await import(process.cwd() + "/vueless.config
 
 const BRAND_COLORS = [
   "brand",
+  "gray",
   "red",
   "orange",
   "amber",
@@ -121,10 +122,6 @@ function findColors(files, component) {
 
   if (brandColor && brandColor !== "grayscale") {
     colors.push(brandColor);
-  }
-
-  if (!BRAND_COLORS.includes("gray")) {
-    BRAND_COLORS.push("gray");
   }
 
   /* Add safelist colors from config */
