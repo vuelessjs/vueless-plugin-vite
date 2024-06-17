@@ -85,6 +85,17 @@ export function createTailwindSafelist(mode, env, debug) {
   }
 }
 
+export function clearTailwindSafelist(debug) {
+  isDebug = debug || false;
+
+  process.env.VUELESS_SAFELIST = "";
+
+  if (isDebug) {
+    // eslint-disable-next-line no-console
+    console.log("Safelist deleted:", process.env.SAFELIST_JSON);
+  }
+}
+
 function getFiles(dirPath, extension, fileList) {
   const files = fs.readdirSync(dirPath);
 

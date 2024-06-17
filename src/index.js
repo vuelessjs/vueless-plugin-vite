@@ -3,7 +3,7 @@
 import UnpluginVueComponents from "unplugin-vue-components/vite";
 
 import { addWebTypesToPackageJson, saveConfigsToEnv } from "./services/common.service.js";
-import { createTailwindSafelist } from "./services/tailwindSafelist.service.js";
+import { createTailwindSafelist, clearTailwindSafelist } from "./services/tailwindSafelist.service.js";
 import { copyIcons, removeIcons } from "./services/iconLoader.service.js";
 import { loadSvg } from "./services/svgLoader.service.js";
 import { componentResolver, directiveResolver } from "./resolvers/vueless.resolver.js";
@@ -22,9 +22,12 @@ export const VuelessUnpluginComponents = (options) =>
   – Loads SVG images as a Vue components.
  */
 export const Vueless = function (options = {}) {
-  /* remove dynamically copied icons if server stopped by developer (Ctrl+C) */
+  /* if server stopped by developer (Ctrl+C) */
   process.on("SIGINT", () => {
+    /* remove dynamically copied icons */
     removeIcons(options.debug);
+    /* clear tailwind safelist */
+    clearTailwindSafelist(options.debug);
     process.exit(0);
   });
 
@@ -48,9 +51,10 @@ export const Vueless = function (options = {}) {
       /* save vueless and tailwind configs into env variables (it needs for vueless tailwind preset) */
       saveConfigsToEnv();
 
+      /* collect used in project colors for tailwind safelist */
+      createTailwindSafelist(options.mode, options.env, options.debug);
+
       if (config.command === "build") {
-        /* collect used in project colors for tailwind safelist */
-        createTailwindSafelist(options.mode, options.env, options.debug);
         /* dynamically copy used icons before build */
         copyIcons("vuelessIcons", options.env, options.debug);
         copyIcons(options.mode, options.env, options.debug);
@@ -70,5 +74,16 @@ export const Vueless = function (options = {}) {
 
     /* load SVG images as a Vue components */
     load: async (id) => await loadSvg(id, options),
+
+    handleHotUpdate: async ({ file, read }) => {
+      if (file.endsWith(".js") || file.endsWith(".ts")) {
+        const fileContent = await read();
+
+        if (fileContent.includes("safelist:")) {
+          /* collect used in project colors for tailwind safelist */
+          createTailwindSafelist(options.mode, options.env, options.debug);
+        }
+      }
+    },
   };
 };
