@@ -63,7 +63,6 @@ export const components = {
 
   /* Data */
   UTable: { folder: "ui.data-table" },
-  UTableCell: { folder: "ui.data-table-cell" },
   UDataList: { folder: "ui.data-list" },
 
   /* Navigation */
