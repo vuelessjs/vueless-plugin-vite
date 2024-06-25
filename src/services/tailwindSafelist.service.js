@@ -56,9 +56,11 @@ export function createTailwindSafelist(mode, env, debug) {
     let { colors, isExistsComponent } = mode === "storybook" ? storybookColors : findColors(files, component.name);
 
     if (isExistsComponent && colors.length) {
-      hasNestedComponents
-        ? component.safelist.forEach((nestedComponentName) => addToSafelist(nestedComponentName, colors))
-        : addToSafelist(component.name, colors);
+      addToSafelist(component.name, colors);
+
+      if (hasNestedComponents) {
+        component.safelist.forEach((nestedComponentName) => addToSafelist(nestedComponentName, colors));
+      }
     }
   });
 
