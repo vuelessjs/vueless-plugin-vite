@@ -104,42 +104,52 @@ function findAndCopyIcons(files) {
     const uIconNameRegex = /\bname\s*=\s*(['"])(.*?)\1/g;
     const uIconMatchNameArray = fileContents.match(/<UIcon[^>]+>/g);
 
-    function getTernaryValues(expression) {
-      const [, values] = expression
-        .replace(/\s/g, "") // newlines and spaces
-        .replace(/\?\./g, "") // conditional chaining `?.`
-        .replace(/['"]/g, "") // single and double quotes
-        .split("?");
+    copyIconsFromComponent(uIconNameRegex, uIconMatchNameArray);
 
-      const [trueValue, falseValue] = values.split(":");
+    /* UButton */
+    const uButtonIconNameRegex = /\w*(icon)\w*=\s*(['"])(.*?)\1/g;
+    const uButtonMatchNameArray = fileContents.match(/<UButton[^>]+>/g);
 
-      return [trueValue, falseValue];
-    }
-
-    if (uIconMatchNameArray) {
-      for (const match of uIconMatchNameArray) {
-        const iconNameMatch = uIconNameRegex.exec(match);
-        const iconName = iconNameMatch ? iconNameMatch[2] : null;
-
-        try {
-          if (!iconName) return;
-
-          if (iconName?.includes("?")) {
-            const [trueName, falseName] = getTernaryValues(iconName);
-
-            copyFile(trueName);
-            copyFile(falseName);
-          } else {
-            copyFile(iconName);
-          }
-        } catch (error) {
-          // console.log(error);
-        }
-
-        uIconNameRegex.lastIndex = 0;
-      }
-    }
+    copyIconsFromComponent(uButtonIconNameRegex, uButtonMatchNameArray);
   });
+
+  function copyIconsFromComponent(matchNameArray, iconNameRegex) {
+    if (!matchNameArray) return;
+
+    for (const match of matchNameArray) {
+      const iconNameMatch = iconNameRegex.exec(match);
+      const iconName = iconNameMatch ? iconNameMatch[2] : null;
+
+      try {
+        if (!iconName) return;
+
+        if (iconName?.includes("?")) {
+          const [trueName, falseName] = getTernaryValues(iconName);
+
+          copyFile(trueName);
+          copyFile(falseName);
+        } else {
+          copyFile(iconName);
+        }
+      } catch (error) {
+        // console.log(error);
+      }
+
+      iconNameRegex.lastIndex = 0;
+    }
+  }
+
+  function getTernaryValues(expression) {
+    const [, values] = expression
+      .replace(/\s/g, "") // newlines and spaces
+      .replace(/\?\./g, "") // conditional chaining `?.`
+      .replace(/['"]/g, "") // single and double quotes
+      .split("?");
+
+    const [trueValue, falseValue] = values.split(":");
+
+    return [trueValue, falseValue];
+  }
 
   function copyFile(name) {
     name = name.toLowerCase();
