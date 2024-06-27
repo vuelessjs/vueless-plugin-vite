@@ -113,7 +113,7 @@ function findAndCopyIcons(files) {
     copyIconsFromComponent(uButtonIconNameRegex, uButtonMatchNameArray);
   });
 
-  function copyIconsFromComponent(matchNameArray, iconNameRegex) {
+  function copyIconsFromComponent(iconNameRegex, matchNameArray) {
     if (!matchNameArray) return;
 
     for (const match of matchNameArray) {
