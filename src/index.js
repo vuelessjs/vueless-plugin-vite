@@ -47,12 +47,12 @@ export const Vueless = function (options = {}) {
       },
     }),
 
-    configResolved: (config) => {
+    configResolved: async (config) => {
       /* save vueless and tailwind configs into env variables (it needs for vueless tailwind preset) */
-      saveConfigsToEnv();
+      await saveConfigsToEnv();
 
       /* collect used in project colors for tailwind safelist */
-      createTailwindSafelist(options.mode, options.env, options.debug);
+      await createTailwindSafelist(options.mode, options.env, options.debug);
 
       if (config.command === "build") {
         /* dynamically copy used icons before build */
@@ -65,7 +65,7 @@ export const Vueless = function (options = {}) {
         removeIcons(options.debug);
 
         /* add web-types config to the package.json */
-        addWebTypesToPackageJson(options.env, options.debug);
+        await addWebTypesToPackageJson(options.env, options.debug);
       }
     },
 
@@ -81,7 +81,7 @@ export const Vueless = function (options = {}) {
 
         if (fileContent.includes("safelist:")) {
           /* collect used in project colors for tailwind safelist */
-          createTailwindSafelist(options.mode, options.env, options.debug);
+          await createTailwindSafelist(options.mode, options.env, options.debug);
         }
       }
     },

@@ -1,6 +1,8 @@
-import fs from "fs";
-import path from "path";
+import path from "node:path";
+import { readdir, stat, readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { components } from "../constants/index.js";
+import bfj from "bfj";
 
 /* Load Vueless config from the project root. */
 const { default: vuelessConfig } = await import(process.cwd() + "/vueless.config.js");
@@ -29,16 +31,16 @@ const BRAND_COLORS = [
 
 let isDebug = false;
 
-export function createTailwindSafelist(mode, env, debug) {
+export async function createTailwindSafelist(mode, env, debug) {
   isDebug = debug || false;
 
   const safelist = [];
   const isVuelessEnv = env === "vueless";
   const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless";
 
-  const srcVueFiles = isVuelessEnv ? [] : getFiles("src", ".vue");
-  const vuelessVueFiles = getFiles(vuelessFilePath, ".vue");
-  const vuelessJsConfigFiles = getFiles(vuelessFilePath, ".config.js");
+  const srcVueFiles = isVuelessEnv ? [] : await getFiles("src", ".vue");
+  const vuelessVueFiles = await getFiles(vuelessFilePath, ".vue");
+  const vuelessJsConfigFiles = await getFiles(vuelessFilePath, ".config.js");
 
   const files = [...srcVueFiles, ...vuelessVueFiles, ...vuelessJsConfigFiles];
 
@@ -49,24 +51,26 @@ export function createTailwindSafelist(mode, env, debug) {
   });
 
   /* Generate safelist */
-  componentsWithSafelist.forEach((component) => {
+  componentsWithSafelist.forEach(async (component) => {
     const hasNestedComponents = Array.isArray(component.safelist);
     const storybookColors = { colors: BRAND_COLORS, isExistsComponent: true };
 
-    let { colors, isExistsComponent } = mode === "storybook" ? storybookColors : findColors(files, component.name);
+    let { colors, isExistsComponent } =
+      mode === "storybook" ? storybookColors : await findColors(files, component.name);
 
     if (isExistsComponent && colors.length) {
-      addToSafelist(component.name, colors);
+      await addToSafelist(component.name, colors);
 
       if (hasNestedComponents) {
-        component.safelist.forEach((nestedComponentName) => addToSafelist(nestedComponentName, colors));
+        component.safelist.forEach(async (nestedComponentName) => await addToSafelist(nestedComponentName, colors));
       }
     }
   });
 
-  function addToSafelist(component, colors) {
+  async function addToSafelist(component, colors) {
     const defaultConfigPath = vuelessJsConfigFiles.find((file) => checkDefaultConfig(file, component));
-    const defaultSafelist = getDefaultConfig(defaultConfigPath)?.safelist;
+    const defaultConfig = await getDefaultConfig(defaultConfigPath);
+    const defaultSafelist = defaultConfig?.safelist;
     const customSafelist = vuelessConfig.component && vuelessConfig.component[component]?.safelist;
 
     const colorString = colors.join("|");
@@ -80,7 +84,7 @@ export function createTailwindSafelist(mode, env, debug) {
     }
   }
 
-  process.env.VUELESS_SAFELIST = JSON.stringify(safelist);
+  process.env.VUELESS_SAFELIST = await bfj.stringify(safelist);
 
   if (isDebug) {
     // eslint-disable-next-line no-console
@@ -99,17 +103,17 @@ export function clearTailwindSafelist(debug) {
   }
 }
 
-function getFiles(dirPath, extension, fileList) {
-  const files = fs.readdirSync(dirPath);
+async function getFiles(dirPath, extension, fileList) {
+  const files = await readdir(dirPath);
 
   fileList = fileList || [];
 
-  files.forEach((file) => {
+  files.forEach(async (file) => {
     const filePath = path.join(dirPath, file);
-    const stat = fs.statSync(filePath);
+    const fileStats = await stat(filePath);
 
-    if (stat.isDirectory()) {
-      fileList = getFiles(filePath, extension, fileList);
+    if (fileStats.isDirectory()) {
+      fileList = await getFiles(filePath, extension, fileList);
     } else {
       filePath.endsWith(extension) && fileList.push(filePath);
     }
@@ -118,7 +122,7 @@ function getFiles(dirPath, extension, fileList) {
   return fileList;
 }
 
-function findColors(files, component) {
+async function findColors(files, component) {
   const colors = [];
   const brandColor = getBrandColor();
 
@@ -131,8 +135,14 @@ function findColors(files, component) {
 
   let isExistsComponent = false;
 
-  files.forEach((file) => {
-    const fileContents = fs.existsSync(file) ? fs.readFileSync(file).toString() : "";
+  files.forEach(async (file) => {
+    let fileContents = "";
+
+    if (existsSync(file)) {
+      const fileBuffer = await readFile(file);
+
+      fileContents = fileBuffer.toString();
+    }
 
     const isDefaultConfig = checkDefaultConfig(file, component);
 
@@ -206,9 +216,11 @@ function checkDefaultConfig(filePath, component) {
   return filePath.includes(components[component].folder) && filePath.endsWith("default.config.js");
 }
 
-function getDefaultConfig(path) {
-  if (fs.existsSync(path)) {
-    const defaultConfigFile = fs.readFileSync(path).toString();
+async function getDefaultConfig(path) {
+  if (existsSync(path)) {
+    const defaultConfigFileBuffer = await readFile(path);
+
+    const defaultConfigFile = defaultConfigFileBuffer.toString();
 
     const objectStartIndex = defaultConfigFile.indexOf("{");
     const objectString = defaultConfigFile.substring(objectStartIndex).replace("};", "}");
