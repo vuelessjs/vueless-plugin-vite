@@ -76,10 +76,10 @@ export const Vueless = function (options = {}) {
     load: async (id) => await loadSvg(id, options),
 
     handleHotUpdate: async ({ file, read }) => {
-      if (file.endsWith(".js") || file.endsWith(".ts")) {
+      if (file.endsWith(".js") || file.endsWith(".ts") || file.endsWith(".vue")) {
         const fileContent = await read();
 
-        if (fileContent.includes("safelist:")) {
+        if (fileContent.includes("safelist:") || fileContent.includes("color=")) {
           /* collect used in project colors for tailwind safelist */
           createTailwindSafelist(options.mode, options.env, options.debug);
         }
