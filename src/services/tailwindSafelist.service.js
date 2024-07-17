@@ -80,7 +80,9 @@ export function createTailwindSafelist(mode, env, debug) {
     }
   }
 
-  process.env.VUELESS_SAFELIST = JSON.stringify(safelist);
+  const mergedSafelist = mergeSafelistPatterns(safelist);
+
+  process.env.VUELESS_SAFELIST = JSON.stringify(mergedSafelist);
 
   if (isDebug) {
     // eslint-disable-next-line no-console
@@ -216,4 +218,50 @@ function getDefaultConfig(path) {
     // indirect eval
     return (0, eval)("(" + objectString + ")"); // Converting into JS object
   }
+}
+
+/**
+ Combine collected tailwind patterns from different components into groups.
+ */
+function mergeSafelistPatterns(data) {
+  const mergedData = {};
+
+  data.forEach((item) => {
+    const pattern = item.pattern;
+    const [prefix, colorPattern, suffix] = pattern.match(/^(.*-)\((.*)\)-(\d+)$/).slice(1, 4);
+
+    const key = `${prefix}(${colorPattern})`;
+
+    if (!mergedData[key]) {
+      mergedData[key] = {};
+    }
+
+    if (!mergedData[key][colorPattern]) {
+      mergedData[key][colorPattern] = [];
+    }
+
+    if (!mergedData[key][colorPattern].includes(suffix)) {
+      mergedData[key][colorPattern].push(suffix);
+    }
+
+    if (item.variants) {
+      if (!mergedData[key].variants) {
+        mergedData[key].variants = new Set();
+      }
+
+      item.variants.forEach((variant) => mergedData[key].variants.add(variant));
+    }
+  });
+
+  return Object.entries(mergedData).map(([key, value]) => {
+    const suffixes = Object.values(value)[0].join("|");
+    const pattern = `${key}-(${suffixes})`;
+    const result = { pattern };
+
+    if (value.variants) {
+      result.variants = Array.from(value.variants);
+    }
+
+    return result;
+  });
 }
