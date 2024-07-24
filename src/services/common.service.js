@@ -40,7 +40,7 @@ export function addWebTypesToPackageJson(env) {
 }
 
 export async function getDirFiles(dirPath, ext, { recursive = false } = {}) {
-  const fileNames = await readdir(dirPath, { recursive: recursive });
+  const fileNames = await readdir(dirPath, { recursive });
 
   return fileNames.filter((fileName) => fileName.endsWith(ext)).map((fileName) => path.join(dirPath, fileName));
 }

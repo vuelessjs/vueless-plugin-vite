@@ -4,6 +4,7 @@ import path from "node:path";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { getDirFiles } from "./common.service.js";
+import { isEqual } from "lodash-es";
 
 import { components } from "../constants/index.js";
 
@@ -65,17 +66,16 @@ export async function createTailwindSafelist(mode, env) {
   for await (const component of componentsWithSafelist) {
     const hasNestedComponents = Array.isArray(component.safelist);
 
-    const { colors, isComponentExists } = isStorybookMode
-      ? storybookColors
-      : await findComponentColors(vuelessFiles, component.name);
+    // TODO: Return isComponentExists check(?)
+    const { colors } = isStorybookMode ? storybookColors : await findComponentColors(vuelessFiles, component.name);
 
-    if (isComponentExists && colors.length) {
+    if (colors.length) {
       const componentSafelist = await getComponentSafelist(component.name, colors, vuelessConfigFiles);
 
       safelist.push(...componentSafelist);
     }
 
-    if (isComponentExists && colors.length && hasNestedComponents) {
+    if (colors.length && hasNestedComponents) {
       for await (const nestedComponent of component.safelist) {
         const nestedComponentSafelist = await getComponentSafelist(nestedComponent, colors, vuelessConfigFiles);
 
@@ -178,45 +178,40 @@ function getSafelistColorsFromConfig(componentName) {
 /**
  Combine collected tailwind patterns from different components into groups.
  */
-function mergeSafelistPatterns(data) {
-  const mergedData = {};
-
-  data.forEach((item) => {
-    const pattern = item.pattern;
-    const [prefix, colorPattern, suffix] = pattern.match(/^(.*-)\((.*)\)-(\d+)$/).slice(1, 4);
-
-    const key = `${prefix}(${colorPattern})`;
-
-    if (!mergedData[key]) {
-      mergedData[key] = {};
-    }
-
-    if (!mergedData[key][colorPattern]) {
-      mergedData[key][colorPattern] = [];
-    }
-
-    if (!mergedData[key][colorPattern].includes(suffix)) {
-      mergedData[key][colorPattern].push(suffix);
-    }
+function mergeSafelistPatterns(safelist) {
+  return getDestructedSafelistItems(safelist).map((item) => {
+    const pattern = `${item.prefix}(${item.colorPattern})-(${Array.from(item.shades).join("|")})`;
+    const safelistItem = { pattern };
 
     if (item.variants) {
-      if (!mergedData[key].variants) {
-        mergedData[key].variants = new Set();
-      }
+      safelistItem.variants = item.variants;
+    }
 
-      item.variants.forEach((variant) => mergedData[key].variants.add(variant));
+    return safelistItem;
+  });
+}
+
+function getDestructedSafelistItems(safelist) {
+  const items = [];
+
+  safelist.forEach((safelistItem) => {
+    const [prefix, colorPattern, suffix] = safelistItem.pattern.match(/^(.*-)\((.*)\)-(\d+)$/).slice(1, 4);
+
+    const dataItem = {
+      prefix,
+      colorPattern,
+      variants: safelistItem.variants,
+      shades: new Set([suffix]),
+    };
+
+    const mergedIndex = items.findIndex((element) => isEqual(element, dataItem));
+
+    if (mergedIndex < 0) {
+      items.push(dataItem);
+    } else {
+      items[mergedIndex].shades.add(suffix);
     }
   });
 
-  return Object.entries(mergedData).map(([key, value]) => {
-    const suffixes = Object.values(value)[0].join("|");
-    const pattern = `${key}-(${suffixes})`;
-    const result = { pattern };
-
-    if (value.variants) {
-      result.variants = Array.from(value.variants);
-    }
-
-    return result;
-  });
+  return items;
 }
