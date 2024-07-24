@@ -1,9 +1,11 @@
-import fs from "fs";
-import path from "path";
-import { components } from "../constants/index.js";
+/* eslint-disable no-unused-vars */
 
-/* Load Vueless config from the project root. */
-const { default: vuelessConfig } = await import(process.cwd() + "/vueless.config.js");
+import path from "node:path";
+import { existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { getDirFiles } from "./common.service.js";
+
+import { components } from "../constants/index.js";
 
 const BRAND_COLORS = [
   "brand",
@@ -27,197 +29,150 @@ const BRAND_COLORS = [
   "rose",
 ];
 
-let isDebug = false;
+const { default: vuelessConfig } = await import(path.join(process.cwd(), "vueless.config.js"));
 
-export function createTailwindSafelist(mode, env, debug) {
-  isDebug = debug || false;
+const storybookColors = { colors: BRAND_COLORS, isComponentExists: true };
 
+const objectColorRegExp = new RegExp(/\bcolor\s*:\s*["']([^"'\s]+)["']/, "g");
+const singleColorRegExp = new RegExp(/\bcolor\s*=\s*["']([^"'\s]+)["']/);
+const ternaryColorRegExp = new RegExp(/\bcolor="[^']*'([^']*)'\s*:\s*'([^']*)'/);
+
+export function clearTailwindSafelist() {
+  process.env.VUELESS_SAFELIST = "";
+}
+
+export async function createTailwindSafelist(mode, env) {
   const safelist = [];
+
+  const isStorybookMode = mode === "storybook";
   const isVuelessEnv = env === "vueless";
   const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless";
 
-  const srcVueFiles = isVuelessEnv ? [] : getFiles("src", ".vue");
-  const vuelessVueFiles = getFiles(vuelessFilePath, ".vue");
-  const vuelessJsConfigFiles = getFiles(vuelessFilePath, ".config.js");
+  const libVueFiles = await getDirFiles(vuelessFilePath, ".vue", { recursive: true });
+  const vuelessConfigFiles = await getDirFiles(vuelessFilePath, ".config.js", { recursive: true });
+  let srcVueFiles = [];
 
-  const files = [...srcVueFiles, ...vuelessVueFiles, ...vuelessJsConfigFiles];
+  if (!isVuelessEnv) {
+    srcVueFiles = await getDirFiles("src", ".vue", { recursive: true });
+  }
 
-  const componentsWithSafelist = [];
+  const vuelessFiles = [...libVueFiles, ...srcVueFiles, ...vuelessConfigFiles];
 
-  Object.entries(components).forEach(([key, value]) => {
-    value.safelist && componentsWithSafelist.push({ name: key, safelist: value.safelist });
-  });
+  const componentsWithSafelist = Object.entries(components)
+    .filter(([_key, value]) => value.safelist)
+    .map(([key, value]) => ({ name: key, safelist: value.safelist }));
 
-  /* Generate safelist */
-  componentsWithSafelist.forEach((component) => {
+  for await (const component of componentsWithSafelist) {
     const hasNestedComponents = Array.isArray(component.safelist);
-    const storybookColors = { colors: BRAND_COLORS, isExistsComponent: true };
 
-    let { colors, isExistsComponent } = mode === "storybook" ? storybookColors : findColors(files, component.name);
+    const { colors, isComponentExists } = isStorybookMode
+      ? storybookColors
+      : await findComponentColors(vuelessFiles, component.name);
 
-    if (isExistsComponent && colors.length) {
-      addToSafelist(component.name, colors);
+    if (isComponentExists && colors.length) {
+      const componentSafelist = await getComponentSafelist(component.name, colors, vuelessConfigFiles);
 
-      if (hasNestedComponents) {
-        component.safelist.forEach((nestedComponentName) => addToSafelist(nestedComponentName, colors));
-      }
+      safelist.push(...componentSafelist);
     }
-  });
 
-  function addToSafelist(component, colors) {
-    const defaultConfigPath = vuelessJsConfigFiles.find((file) => checkDefaultConfig(file, component));
-    const defaultSafelist = getDefaultConfig(defaultConfigPath)?.safelist;
-    const customSafelist = vuelessConfig.component && vuelessConfig.component[component]?.safelist;
+    if (isComponentExists && colors.length && hasNestedComponents) {
+      for await (const nestedComponent of component.safelist) {
+        const nestedComponentSafelist = await getComponentSafelist(nestedComponent, colors, vuelessConfigFiles);
 
-    const colorString = colors.join("|");
-
-    const selectedSafelist = customSafelist
-      ? customSafelist && customSafelist(colorString)
-      : defaultSafelist && defaultSafelist(colorString);
-
-    if (selectedSafelist) {
-      safelist.push(...selectedSafelist);
+        safelist.push(...nestedComponentSafelist);
+      }
     }
   }
 
   const mergedSafelist = mergeSafelistPatterns(safelist);
 
   process.env.VUELESS_SAFELIST = JSON.stringify(mergedSafelist);
+}
 
-  if (isDebug) {
-    // eslint-disable-next-line no-console
-    console.log("Generated safelist:", process.env.SAFELIST_JSON);
+async function getComponentSafelist(componentName, colors, configFiles) {
+  const defaultConfigPath = configFiles.find((file) => isDefaultComponentConfig(file, componentName));
+  let defaultSafelist;
+
+  if (defaultConfigPath) {
+    const defaultSafelistModule = await import(path.join(process.cwd(), defaultConfigPath));
+
+    defaultSafelist = defaultSafelistModule.default;
   }
-}
 
-export function clearTailwindSafelist(debug) {
-  isDebug = debug || false;
+  const customSafelist = vuelessConfig.component?.[componentName]?.safelist;
 
-  process.env.VUELESS_SAFELIST = "";
+  const colorString = colors.join("|");
 
-  if (isDebug) {
-    // eslint-disable-next-line no-console
-    console.log("Safelist deleted:", process.env.SAFELIST_JSON);
+  if (customSafelist) {
+    return customSafelist(colorString) || [];
   }
+
+  return (defaultSafelist?.safelist && defaultSafelist.safelist(colorString)) || [];
 }
 
-function getFiles(dirPath, extension, fileList) {
-  const files = fs.readdirSync(dirPath);
+async function findComponentColors(files, componentName) {
+  const componentRegExp = new RegExp(`<${componentName}[^>]+>`, "g");
 
-  fileList = fileList || [];
-
-  files.forEach((file) => {
-    const filePath = path.join(dirPath, file);
-    const stat = fs.statSync(filePath);
-
-    if (stat.isDirectory()) {
-      fileList = getFiles(filePath, extension, fileList);
-    } else {
-      filePath.endsWith(extension) && fileList.push(filePath);
-    }
-  });
-
-  return fileList;
-}
-
-function findColors(files, component) {
-  const colors = [];
-  const brandColor = getBrandColor();
+  const brandColor = getComponentBrandColor(componentName);
+  const colors = new Set();
 
   if (brandColor && brandColor !== "grayscale") {
-    colors.push(brandColor);
+    colors.add(brandColor);
   }
 
-  /* Add safelist colors from config */
-  getSafelistColorsFromConfig(component).forEach((color) => addColor(color, colors));
+  getSafelistColorsFromConfig().forEach((color) => colors.add(color));
 
-  let isExistsComponent = false;
+  let isComponentExists = false;
 
-  files.forEach((file) => {
-    const fileContents = fs.existsSync(file) ? fs.readFileSync(file).toString() : "";
+  for await (const file of files) {
+    if (!existsSync(file)) continue;
 
-    const isDefaultConfig = checkDefaultConfig(file, component);
+    const fileContent = await readFile(file, "utf-8");
+    const isDefaultConfig = isDefaultComponentConfig(file, componentName);
+    const matchedComponent = fileContent.match(componentRegExp);
 
-    /* Collect color from config objects */
+    isComponentExists = Boolean(matchedComponent);
+
     if (isDefaultConfig) {
-      const colorRegExp = /\bcolor\s*:\s*["']([^"'\s]+)["']/g;
-      const matchedColors = fileContents.match(colorRegExp);
+      fileContent.match(objectColorRegExp)?.forEach((colorMatch) => {
+        const [, color] = objectColorRegExp.exec(colorMatch) || [];
 
-      if (matchedColors) {
-        for (const match of matchedColors) {
-          const matchedColor = colorRegExp.exec(match);
-
-          addColor(matchedColor && matchedColor[1], colors);
-
-          colorRegExp.lastIndex = 0;
-        }
-      }
+        colors.add(color);
+      });
     }
 
     /* Collect color from U[Component] */
-    const componentRegExp = new RegExp(`<${component}[^>]+>`, "g");
-    const matchedComponent = fileContents.match(componentRegExp);
+    matchedComponent?.forEach((match) => {
+      const [, singleColor] = singleColorRegExp.exec(match) || [];
+      const [, ternaryColorOne, ternaryColorTwo] = ternaryColorRegExp.exec(match) || [];
 
-    if (matchedComponent) {
-      isExistsComponent = true;
-
-      /* single value prop */
-      const colorRegExp = /\bcolor\s*=\s*["']([^"'\s]+)["']/;
-
-      for (const match of matchedComponent) {
-        const matchedColor = colorRegExp.exec(match);
-
-        addColor(matchedColor && matchedColor[1], colors);
-      }
-
-      /* ternary value prop */
-      const ternaryRegExp = /\bcolor="[^']*'([^']*)'\s*:\s*'([^']*)'/;
-
-      for (const match of matchedComponent) {
-        const matchedColors = ternaryRegExp.exec(match);
-
-        addColor(matchedColors && matchedColors[1], colors);
-        addColor(matchedColors && matchedColors[2], colors);
-      }
-    }
-  });
-
-  return { colors, isExistsComponent };
-}
-
-function addColor(color, colors) {
-  if (BRAND_COLORS.includes(color) && !colors.includes(color)) {
-    colors.push(color);
+      colors.add(singleColor).add(ternaryColorOne).add(ternaryColorTwo);
+    });
   }
+
+  return {
+    colors: Array.from(colors).filter((color) => color && BRAND_COLORS.includes(color)),
+    isComponentExists,
+  };
 }
 
-function getSafelistColorsFromConfig(component) {
+function getComponentBrandColor(componentName) {
+  const globalBrandColor = vuelessConfig.brand || "";
+  const globalComponentConfig = vuelessConfig.component?.[componentName] || {};
+
+  return vuelessConfig.component ? globalComponentConfig.defaultVariants?.color : globalBrandColor;
+}
+
+function isDefaultComponentConfig(filePath, componentName) {
+  return filePath.includes(components[componentName].folder) && filePath.endsWith("default.config.js");
+}
+
+function getSafelistColorsFromConfig(componentName) {
   const globalSafelistColors = vuelessConfig.safelistColors || [];
-  const componentSafelistColors = (vuelessConfig.component && vuelessConfig.component[component]?.safelistColors) || [];
+  const componentSafelistColors =
+    (vuelessConfig.component && vuelessConfig.component[componentName]?.safelistColors) || [];
 
   return [...globalSafelistColors, ...componentSafelistColors];
-}
-
-function getBrandColor(component) {
-  return vuelessConfig.component
-    ? vuelessConfig.component[component]?.defaultVariants?.color
-    : vuelessConfig.brand || "";
-}
-
-function checkDefaultConfig(filePath, component) {
-  return filePath.includes(components[component].folder) && filePath.endsWith("default.config.js");
-}
-
-function getDefaultConfig(path) {
-  if (fs.existsSync(path)) {
-    const defaultConfigFile = fs.readFileSync(path).toString();
-
-    const objectStartIndex = defaultConfigFile.indexOf("{");
-    const objectString = defaultConfigFile.substring(objectStartIndex).replace("};", "}");
-
-    // indirect eval
-    return (0, eval)("(" + objectString + ")"); // Converting into JS object
-  }
 }
 
 /**

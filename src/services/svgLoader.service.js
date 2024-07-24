@@ -40,10 +40,7 @@ export async function loadSvg(id, options) {
   try {
     svg = await fs.promises.readFile(path, "utf-8");
   } catch (ex) {
-    console.warn(
-      "\n",
-      `${id} couldn't be loaded by vite-plugin-vue-vueless, fallback to default loader.`,
-    );
+    console.warn("\n", `${id} couldn't be loaded by vite-plugin-vue-vueless, fallback to default loader.`);
 
     return;
   }
