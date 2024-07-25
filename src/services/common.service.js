@@ -2,6 +2,8 @@ import resolveConfig from "tailwindcss/resolveConfig.js";
 import path from "path";
 import fs from "fs";
 
+import { readdir } from "node:fs/promises";
+
 /* Load Vueless and Tailwind config from the project root. */
 const { default: vuelessConfig } = await import(process.cwd() + "/vueless.config.js");
 const { default: tailwindConfig } = await import(process.cwd() + "/tailwind.config.js");
@@ -35,4 +37,10 @@ export function addWebTypesToPackageJson(env) {
     // eslint-disable-next-line no-console
     console.error("Error:", error);
   }
+}
+
+export async function getDirFiles(dirPath, ext, { recursive = true } = {}) {
+  const fileNames = await readdir(dirPath, { recursive });
+
+  return fileNames.filter((fileName) => fileName.endsWith(ext)).map((fileName) => path.join(dirPath, fileName));
 }
