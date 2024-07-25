@@ -32,50 +32,47 @@ const BRAND_COLORS = [
 
 const { default: vuelessConfig } = await import(path.join(process.cwd(), "vueless.config.js"));
 
-const storybookColors = { colors: BRAND_COLORS, isComponentExists: true };
-
-const objectColorRegExp = new RegExp(/\bcolor\s*:\s*["']([^"'\s]+)["']/, "g");
-const singleColorRegExp = new RegExp(/\bcolor\s*=\s*["']([^"'\s]+)["']/);
-const ternaryColorRegExp = new RegExp(/\bcolor="[^']*'([^']*)'\s*:\s*'([^']*)'/);
-
 export function clearTailwindSafelist() {
   process.env.VUELESS_SAFELIST = "";
 }
 
 export async function createTailwindSafelist(mode, env) {
+  const storybookColors = { colors: BRAND_COLORS, isComponentExists: true };
+
   const safelist = [];
 
   const isStorybookMode = mode === "storybook";
   const isVuelessEnv = env === "vueless";
   const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless";
 
-  const libVueFiles = await getDirFiles(vuelessFilePath, ".vue", { recursive: true });
-  const vuelessConfigFiles = await getDirFiles(vuelessFilePath, ".config.js", { recursive: true });
+  const vuelessVueFiles = await getDirFiles(vuelessFilePath, ".vue");
+  const vuelessConfigFiles = await getDirFiles(vuelessFilePath, ".config.js");
   let srcVueFiles = [];
 
   if (!isVuelessEnv) {
-    srcVueFiles = await getDirFiles("src", ".vue", { recursive: true });
+    srcVueFiles = await getDirFiles("src", ".vue");
   }
 
-  const vuelessFiles = [...libVueFiles, ...srcVueFiles, ...vuelessConfigFiles];
+  const vuelessFiles = [...srcVueFiles, ...vuelessVueFiles, ...vuelessConfigFiles];
 
   const componentsWithSafelist = Object.entries(components)
-    .filter(([_key, value]) => value.safelist)
+    .filter(([, value]) => value.safelist)
     .map(([key, value]) => ({ name: key, safelist: value.safelist }));
 
   for await (const component of componentsWithSafelist) {
     const hasNestedComponents = Array.isArray(component.safelist);
 
-    // TODO: Return isComponentExists check(?)
-    const { colors } = isStorybookMode ? storybookColors : await findComponentColors(vuelessFiles, component.name);
+    const { colors, isComponentExists } = isStorybookMode
+      ? storybookColors
+      : await findComponentColors(vuelessFiles, component.name);
 
-    if (colors.length) {
+    if (isComponentExists && colors.length) {
       const componentSafelist = await getComponentSafelist(component.name, colors, vuelessConfigFiles);
 
       safelist.push(...componentSafelist);
     }
 
-    if (colors.length && hasNestedComponents) {
+    if (isComponentExists && colors.length && hasNestedComponents) {
       for await (const nestedComponent of component.safelist) {
         const nestedComponentSafelist = await getComponentSafelist(nestedComponent, colors, vuelessConfigFiles);
 
@@ -111,7 +108,9 @@ async function getComponentSafelist(componentName, colors, configFiles) {
 }
 
 async function findComponentColors(files, componentName) {
-  const componentRegExp = new RegExp(`<${componentName}[^>]+>`, "g");
+  const objectColorRegExp = new RegExp(/\bcolor\s*:\s*["']([^"'\s]+)["']/, "g");
+  const singleColorRegExp = new RegExp(/\bcolor\s*=\s*["']([^"'\s]+)["']/);
+  const ternaryColorRegExp = new RegExp(/\bcolor="[^']*'([^']*)'\s*:\s*'([^']*)'/);
 
   const brandColor = getComponentBrandColor(componentName);
   const colors = new Set();
@@ -129,9 +128,12 @@ async function findComponentColors(files, componentName) {
 
     const fileContent = await readFile(file, "utf-8");
     const isDefaultConfig = isDefaultComponentConfig(file, componentName);
+    const componentRegExp = new RegExp(`<${componentName}[^>]+>`, "g");
     const matchedComponent = fileContent.match(componentRegExp);
 
-    isComponentExists = Boolean(matchedComponent);
+    if (!isComponentExists) {
+      isComponentExists = Boolean(matchedComponent);
+    }
 
     if (isDefaultConfig) {
       fileContent.match(objectColorRegExp)?.forEach((colorMatch) => {
@@ -179,7 +181,15 @@ function getSafelistColorsFromConfig(componentName) {
  Combine collected tailwind patterns from different components into groups.
  */
 function mergeSafelistPatterns(safelist) {
-  return getDestructedSafelistItems(safelist).map((item) => {
+  const safelistItemsWithVariants = safelist.filter((item) => item.variants);
+  const safelistItemsWithoutVariants = safelist.filter((item) => !item.variants);
+
+  const destructedSafelist = getDestructedSafelistItems([
+    ...safelistItemsWithoutVariants,
+    ...safelistItemsWithVariants,
+  ]);
+
+  return destructedSafelist.map((item) => {
     const pattern = `${item.prefix}(${item.colorPattern})-(${Array.from(item.shades).join("|")})`;
     const safelistItem = { pattern };
 
@@ -204,12 +214,38 @@ function getDestructedSafelistItems(safelist) {
       shades: new Set([suffix]),
     };
 
-    const mergedIndex = items.findIndex((element) => isEqual(element, dataItem));
+    const mergedIndex = items.findIndex((element) => {
+      return (
+        element.prefix === dataItem.prefix &&
+        element.colorPattern === dataItem.colorPattern &&
+        isEqual(element.variants, dataItem.variants)
+      );
+    });
 
-    if (mergedIndex < 0) {
+    if (mergedIndex === -1) {
       items.push(dataItem);
     } else {
       items[mergedIndex].shades.add(suffix);
+    }
+  });
+
+  // Merge items with the same prefix, colorPattern, and shades, but different variants
+  items.forEach((item, idx) => {
+    if (!item.variants) return;
+
+    const duplicateIndex = items.findIndex((element, index) => {
+      return (
+        index !== idx &&
+        element.variants &&
+        element.prefix === item.prefix &&
+        element.colorPattern === item.colorPattern &&
+        isEqual(element.shades, item.shades)
+      );
+    });
+
+    if (duplicateIndex !== -1) {
+      items[idx].variants = [...new Set([...item.variants, ...items[duplicateIndex].variants])];
+      items.splice(duplicateIndex, 1);
     }
   });
 
