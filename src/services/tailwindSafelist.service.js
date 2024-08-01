@@ -148,7 +148,15 @@ async function findComponentColors(files, componentName) {
       const [, singleColor] = singleColorRegExp.exec(match) || [];
       const [, ternaryColorOne, ternaryColorTwo] = ternaryColorRegExp.exec(match) || [];
 
-      colors.add(singleColor).add(ternaryColorOne).add(ternaryColorTwo);
+      // Match color in script variables.
+      // TODO: In some cases variable with color may be imported, need to find out how to track and read it.
+      const objectColors = objectColorRegExp.exec(fileContent) || [];
+
+      [singleColor, ternaryColorOne, ternaryColorTwo, ...objectColors].forEach((color) => {
+        if (color) {
+          colors.add(color);
+        }
+      });
     });
   }
 
@@ -236,17 +244,28 @@ function getDestructedSafelistItems(safelist) {
     if (!item.variants) return;
 
     const duplicateIndex = items.findIndex((element, index) => {
+      const elementColors = element.colorPattern.split("|");
+      const itemColors = item.colorPattern.split("|");
+
+      const isIncludesColors =
+        elementColors.some((color) => itemColors.includes(color)) ||
+        itemColors.some((color) => elementColors.includes(color)) ||
+        item.colorPattern === element.colorPattern;
+
       return (
         index !== idx &&
         element.variants &&
         element.prefix === item.prefix &&
-        element.colorPattern === item.colorPattern &&
+        isIncludesColors &&
         isEqual(element.shades, item.shades)
       );
     });
 
     if (duplicateIndex !== -1) {
       items[idx].variants = [...new Set([...item.variants, ...items[duplicateIndex].variants])];
+      items[idx].colorPattern = [
+        ...new Set([...item.colorPattern.split("|"), ...items[duplicateIndex].colorPattern.split("|")]),
+      ].join("|");
       items.splice(duplicateIndex, 1);
     }
   });
