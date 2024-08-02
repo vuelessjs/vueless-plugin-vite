@@ -148,7 +148,12 @@ async function findComponentColors(files, componentName) {
       const [, singleColor] = singleColorRegExp.exec(match) || [];
       const [, ternaryColorOne, ternaryColorTwo] = ternaryColorRegExp.exec(match) || [];
 
-      colors.add(singleColor).add(ternaryColorOne).add(ternaryColorTwo);
+      // Match color in script variables.
+      const objectColors = objectColorRegExp.exec(fileContent) || [];
+
+      [singleColor, ternaryColorOne, ternaryColorTwo, ...objectColors].forEach((color) => {
+        if (color) colors.add(color);
+      });
     });
   }
 
@@ -183,16 +188,11 @@ function getSafelistColorsFromConfig(componentName) {
  Combine collected tailwind patterns from different components into groups.
  */
 function mergeSafelistPatterns(safelist) {
-  const safelistItemsWithVariants = safelist.filter((item) => item.variants);
-  const safelistItemsWithoutVariants = safelist.filter((item) => !item.variants);
+  const destructedSafelist = getDestructedSafelist(safelist);
+  const mergedColorsSafelist = mergeSafelistColors(destructedSafelist);
 
-  const destructedSafelist = getDestructedSafelistItems([
-    ...safelistItemsWithoutVariants,
-    ...safelistItemsWithVariants,
-  ]);
-
-  return destructedSafelist.map((item) => {
-    const pattern = `${item.prefix}(${item.colorPattern})-(${Array.from(item.shades).join("|")})`;
+  return mergeSafelistVariants(mergedColorsSafelist).map((item) => {
+    const pattern = `${item.colorProperty}(${item.colorPattern})-(${Array.from(item.shades).join("|")})`;
     const safelistItem = { pattern };
 
     if (item.variants) {
@@ -203,53 +203,78 @@ function mergeSafelistPatterns(safelist) {
   });
 }
 
-function getDestructedSafelistItems(safelist) {
-  const items = [];
+function getDestructedSafelist(safelist) {
+  return safelist.map((safelistItem) => {
+    const matchGroupStart = 1;
+    const matchGroupEnd = 4;
+    const safelistItemRegExp = new RegExp(/^(.*-)\((.*)\)-(\d+)$/);
 
-  safelist.forEach((safelistItem) => {
-    const [prefix, colorPattern, suffix] = safelistItem.pattern.match(/^(.*-)\((.*)\)-(\d+)$/).slice(1, 4);
+    const [colorProperty, colorPattern, colorShade] = safelistItem.pattern
+      .match(safelistItemRegExp)
+      .slice(matchGroupStart, matchGroupEnd);
 
-    const dataItem = {
-      prefix,
+    return {
+      colorProperty,
       colorPattern,
       variants: safelistItem.variants,
-      shades: new Set([suffix]),
+      shades: new Set([colorShade]),
     };
+  });
+}
 
-    const mergedIndex = items.findIndex((element) => {
-      return (
-        element.prefix === dataItem.prefix &&
-        element.colorPattern === dataItem.colorPattern &&
-        isEqual(element.variants, dataItem.variants)
-      );
+function mergeSafelistColors(destructedSafelist) {
+  const mergedSafelist = [];
+
+  destructedSafelist.forEach((currentSafelistItem, currentIndex) => {
+    const duplicateIndex = mergedSafelist.findIndex((safelistItem, index) => {
+      const isSameItem = index === currentIndex;
+      const isSameColorProperty = safelistItem.colorProperty === currentSafelistItem.colorProperty;
+      const isSameVariants = isEqual(safelistItem.variants, currentSafelistItem.variants);
+
+      const currentItemColors = currentSafelistItem.colorPattern.split("|");
+      const safelistColors = safelistItem.colorPattern.split("|");
+
+      const isIncludesColors =
+        safelistItem.colorPattern === currentSafelistItem.colorPattern ||
+        currentItemColors.some((color) => safelistColors.includes(color)) ||
+        safelistColors.some((color) => currentItemColors.includes(color));
+
+      return !isSameItem && isSameColorProperty && isSameVariants && isIncludesColors;
     });
 
-    if (mergedIndex === -1) {
-      items.push(dataItem);
+    if (duplicateIndex === -1) {
+      mergedSafelist.push(currentSafelistItem);
     } else {
-      items[mergedIndex].shades.add(suffix);
+      mergedSafelist[duplicateIndex].shades.add(
+        ...currentSafelistItem.shades,
+        ...mergedSafelist[duplicateIndex].shades,
+      );
     }
   });
 
-  // Merge items with the same prefix, colorPattern, and shades, but different variants
-  items.forEach((item, idx) => {
-    if (!item.variants) return;
+  return mergedSafelist;
+}
 
-    const duplicateIndex = items.findIndex((element, index) => {
-      return (
-        index !== idx &&
-        element.variants &&
-        element.prefix === item.prefix &&
-        element.colorPattern === item.colorPattern &&
-        isEqual(element.shades, item.shades)
-      );
+function mergeSafelistVariants(destructedSafelist) {
+  destructedSafelist.forEach((currentSafelistItem, currentIndex) => {
+    if (!currentSafelistItem.variants) return;
+
+    const duplicateIndex = destructedSafelist.findIndex((safelistItem, index) => {
+      const isSameItem = index === currentIndex;
+      const isSameColorProperty = safelistItem.colorProperty === currentSafelistItem.colorProperty;
+      const isSameColors = safelistItem.colorPattern === currentSafelistItem.colorPattern;
+      const isSameShades = isEqual(safelistItem.shades, currentSafelistItem.shades);
+
+      return !isSameItem && isSameColorProperty && isSameColors && isSameShades && safelistItem.variants;
     });
 
     if (duplicateIndex !== -1) {
-      items[idx].variants = [...new Set([...item.variants, ...items[duplicateIndex].variants])];
-      items.splice(duplicateIndex, 1);
+      destructedSafelist[duplicateIndex].variants = [
+        ...new Set(...currentSafelistItem.variants, ...destructedSafelist[duplicateIndex].variants),
+      ];
+      destructedSafelist.splice(duplicateIndex, 1);
     }
   });
 
-  return items;
+  return destructedSafelist;
 }
