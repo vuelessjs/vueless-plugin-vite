@@ -39,10 +39,10 @@ export async function loadSvg(id, options) {
 
   try {
     svg = await fs.promises.readFile(path, "utf-8");
-  } catch (ex) {
+  } catch (exception) {
+    // define empty svg to prevent a UI crash.
+    svg = `<svg xmlns="http://www.w3.org/2000/svg"></svg>`;
     console.warn("\n", `${id} couldn't be loaded by vite-plugin-vue-vueless, fallback to default loader.`);
-
-    return;
   }
 
   if (importType === "raw") {
