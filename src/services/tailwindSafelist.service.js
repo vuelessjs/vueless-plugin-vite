@@ -245,6 +245,14 @@ function mergeSafelistColors(destructedSafelist) {
     if (duplicateIndex === -1) {
       mergedSafelist.push(currentSafelistItem);
     } else {
+      const mergedColors = [
+        ...new Set([
+          ...currentSafelistItem.colorPattern.split("|"),
+          ...mergedSafelist[duplicateIndex].colorPattern.split("|"),
+        ]),
+      ];
+
+      mergedSafelist[duplicateIndex].colorPattern = mergedColors.join("|");
       mergedSafelist[duplicateIndex].shades.add(
         ...currentSafelistItem.shades,
         ...mergedSafelist[duplicateIndex].shades,
