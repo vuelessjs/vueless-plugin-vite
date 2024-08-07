@@ -2,7 +2,7 @@
 
 import UnpluginVueComponents from "unplugin-vue-components/vite";
 
-import { addWebTypesToPackageJson, saveConfigsToEnv } from "./services/common.service.js";
+import { addWebTypesToPackageJson } from "./services/common.service.js";
 import { createTailwindSafelist, clearTailwindSafelist } from "./services/tailwindSafelist.service.js";
 import { copyIcons, removeIcons } from "./services/iconLoader.service.js";
 import { loadSvg } from "./services/svgLoader.service.js";
@@ -48,9 +48,6 @@ export const Vueless = function (options = {}) {
     }),
 
     configResolved: async (config) => {
-      /* save vueless and tailwind configs into env variables (it needs for vueless tailwind preset) */
-      saveConfigsToEnv();
-
       /* collect used in project colors for tailwind safelist */
       await createTailwindSafelist(options.mode, options.env, options.debug);
 
