@@ -83,6 +83,7 @@ export async function createTailwindSafelist(mode, env) {
   const mergedSafelist = mergeSafelistPatterns(safelist);
 
   process.env.VUELESS_SAFELIST = JSON.stringify(mergedSafelist);
+  process.env.VUELESS_STRATEGY = vuelessConfig.strategy || "";
 }
 
 async function getComponentSafelist(componentName, colors, configFiles) {
