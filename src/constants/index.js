@@ -47,6 +47,7 @@ export const components = {
 
   /* Containers */
   UDivider: { folder: "ui.container-divider" },
+  UCol: { folder: "ui.container-col" },
   URow: { folder: "ui.container-row" },
   UGroup: { folder: "ui.container-group" },
   UGroups: { folder: "ui.container-groups" },
