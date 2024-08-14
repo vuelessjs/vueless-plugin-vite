@@ -50,7 +50,6 @@ export const components = {
   UCol: { folder: "ui.container-col" },
   URow: { folder: "ui.container-row" },
   UGroup: { folder: "ui.container-group" },
-  UGroups: { folder: "ui.container-groups" },
   UAccordion: { folder: "ui.container-accordion" },
   UCard: { folder: "ui.container-card" },
   UModal: { folder: "ui.container-modal", safelist: ["UButton"] },
