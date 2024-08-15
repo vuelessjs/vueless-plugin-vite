@@ -9,6 +9,7 @@ import { isEqual } from "lodash-es";
 import { components } from "../constants/index.js";
 
 const BRAND_COLORS = [
+  "brand",
   "gray",
   "red",
   "orange",
