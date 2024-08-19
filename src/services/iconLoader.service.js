@@ -13,7 +13,7 @@ import path from "path";
 import { createRequire } from "module";
 
 /* Load Vueless config from the project root. */
-const { default: vuelessConfig } = await import(process.cwd() + "/vueless.config.js");
+const { default: vuelessConfig } = await import(path.join(process.cwd(), `vueless.config.js?${Date.now()}`));
 
 const DEFAULT_ICONS_DIR = "./src/assets/icons";
 const VUELESS_ICONS_DIR = "./src/assets/icons/cache";

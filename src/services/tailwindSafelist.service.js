@@ -29,7 +29,7 @@ const BRAND_COLORS = [
   "rose",
 ];
 
-const { default: vuelessConfig } = await import(path.join(process.cwd(), "vueless.config.js"));
+const { default: vuelessConfig } = await import(path.join(process.cwd(), `vueless.config.js?${Date.now()}`));
 
 export function clearTailwindSafelist() {
   process.env.VUELESS_SAFELIST = "";
@@ -86,12 +86,14 @@ export async function createTailwindSafelist(mode, env) {
   process.env.VUELESS_STRATEGY = vuelessConfig.strategy || "";
 }
 
-async function getComponentSafelist(componentName, colors, configFiles) {
+async function getComponentSafelist(componentName, { colors, configFiles, isVuelessEnv = false }) {
   const defaultConfigPath = configFiles.find((file) => isDefaultComponentConfig(file, componentName));
   let defaultSafelist;
 
   if (defaultConfigPath) {
-    const defaultSafelistModule = await import(path.join(process.cwd(), defaultConfigPath));
+    // disable file caching on vueless env (for the dev purpose)
+    const configPath = isVuelessEnv ? `${defaultConfigPath}?${Date.now()}` : defaultConfigPath;
+    const defaultSafelistModule = await import(path.join(process.cwd(), configPath));
 
     defaultSafelist = defaultSafelistModule.default;
   }
