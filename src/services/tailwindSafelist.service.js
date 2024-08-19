@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-
 import path from "node:path";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -9,6 +7,7 @@ import { isEqual } from "lodash-es";
 import { components } from "../constants/index.js";
 
 const BRAND_COLORS = [
+  // grayscale - may be needed when `grayscale` variant will contain `{color}` variable.
   "brand",
   "gray",
   "red",
