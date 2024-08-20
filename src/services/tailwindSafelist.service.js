@@ -181,7 +181,7 @@ function getComponentBrandColor(componentName) {
 }
 
 function isDefaultComponentConfig(filePath, componentName) {
-  const componentDirName = filePath.split(path.sep).at(1);
+  const componentDirName = filePath.split(path.sep).at(-3);
 
   return componentDirName === components[componentName].folder && filePath.endsWith("default.config.js");
 }
