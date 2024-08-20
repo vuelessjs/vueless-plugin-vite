@@ -66,14 +66,22 @@ export async function createTailwindSafelist(mode, env) {
       : await findComponentColors(vuelessFiles, component.name);
 
     if (isComponentExists && colors.length) {
-      const componentSafelist = await getComponentSafelist(component.name, colors, vuelessConfigFiles);
+      const componentSafelist = await getComponentSafelist(component.name, {
+        colors,
+        vuelessConfigFiles,
+        isVuelessEnv,
+      });
 
       safelist.push(...componentSafelist);
     }
 
     if (isComponentExists && colors.length && hasNestedComponents) {
       for await (const nestedComponent of component.safelist) {
-        const nestedComponentSafelist = await getComponentSafelist(nestedComponent, colors, vuelessConfigFiles);
+        const nestedComponentSafelist = await getComponentSafelist(nestedComponent, {
+          colors,
+          vuelessConfigFiles,
+          isVuelessEnv,
+        });
 
         safelist.push(...nestedComponentSafelist);
       }
@@ -86,8 +94,8 @@ export async function createTailwindSafelist(mode, env) {
   process.env.VUELESS_STRATEGY = vuelessConfig.strategy || "";
 }
 
-async function getComponentSafelist(componentName, { colors, configFiles, isVuelessEnv = false }) {
-  const defaultConfigPath = configFiles.find((file) => isDefaultComponentConfig(file, componentName));
+async function getComponentSafelist(componentName, { colors, vuelessConfigFiles, isVuelessEnv = false }) {
+  const defaultConfigPath = vuelessConfigFiles.find((file) => isDefaultComponentConfig(file, componentName));
   let defaultSafelist;
 
   if (defaultConfigPath) {
