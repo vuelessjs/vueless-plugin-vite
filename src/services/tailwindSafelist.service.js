@@ -203,11 +203,11 @@ function getSafelistColorsFromConfig(componentName) {
  Combine collected tailwind patterns from different components into groups.
  */
 function mergeSafelistPatterns(safelist) {
-  const destructedSafelist = getDestructedSafelist(safelist);
-  const mergedColorsSafelist = mergeSafelistColors(destructedSafelist);
+  const safelistData = getSafelistData(safelist);
+  const mergedColorsSafelist = mergeSafelistColors(safelistData);
 
   return mergeSafelistVariants(mergedColorsSafelist).map((item) => {
-    const pattern = `${item.colorProperty}(${item.colorPattern})-(${Array.from(item.shades).join("|")})`;
+    const pattern = `${item.property}(${item.colorPattern})-(${Array.from(item.shades).join("|")})`;
     const safelistItem = { pattern };
 
     if (item.variants) {
@@ -218,18 +218,18 @@ function mergeSafelistPatterns(safelist) {
   });
 }
 
-function getDestructedSafelist(safelist) {
+function getSafelistData(safelist) {
   return safelist.map((safelistItem) => {
     const matchGroupStart = 1;
     const matchGroupEnd = 4;
     const safelistItemRegExp = new RegExp(/^(.*-)\((.*)\)-(\d+)$/);
 
-    const [colorProperty, colorPattern, colorShade] = safelistItem.pattern
+    const [property, colorPattern, colorShade] = safelistItem.pattern
       .match(safelistItemRegExp)
       .slice(matchGroupStart, matchGroupEnd);
 
     return {
-      colorProperty,
+      property,
       colorPattern,
       variants: safelistItem.variants,
       shades: new Set([colorShade]),
@@ -237,13 +237,13 @@ function getDestructedSafelist(safelist) {
   });
 }
 
-function mergeSafelistColors(destructedSafelist) {
+function mergeSafelistColors(safelistData) {
   const mergedSafelist = [];
 
-  destructedSafelist.forEach((currentSafelistItem, currentIndex) => {
+  safelistData.forEach((currentSafelistItem, currentIndex) => {
     const duplicateIndex = mergedSafelist.findIndex((safelistItem, index) => {
       const isSameItem = index === currentIndex;
-      const isSameColorProperty = safelistItem.colorProperty === currentSafelistItem.colorProperty;
+      const isSameProperty = safelistItem.property === currentSafelistItem.property;
       const isSameVariants = isEqual(safelistItem.variants, currentSafelistItem.variants);
 
       const currentItemColors = currentSafelistItem.colorPattern.split("|");
@@ -254,7 +254,7 @@ function mergeSafelistColors(destructedSafelist) {
         currentItemColors.some((color) => safelistColors.includes(color)) ||
         safelistColors.some((color) => currentItemColors.includes(color));
 
-      return !isSameItem && isSameColorProperty && isSameVariants && isIncludesColors;
+      return !isSameItem && isSameProperty && isSameVariants && isIncludesColors;
     });
 
     if (duplicateIndex === -1) {
@@ -278,26 +278,27 @@ function mergeSafelistColors(destructedSafelist) {
   return mergedSafelist;
 }
 
-function mergeSafelistVariants(destructedSafelist) {
-  destructedSafelist.forEach((currentSafelistItem, currentIndex) => {
-    if (!currentSafelistItem.variants) return;
+function mergeSafelistVariants(safelistData) {
+  safelistData.forEach((currentItem, currentIndex) => {
+    if (!currentItem.variants) return;
 
-    const duplicateIndex = destructedSafelist.findIndex((safelistItem, index) => {
+    const duplicateIndex = safelistData.findIndex((item, index) => {
       const isSameItem = index === currentIndex;
-      const isSameColorProperty = safelistItem.colorProperty === currentSafelistItem.colorProperty;
-      const isSameColors = safelistItem.colorPattern === currentSafelistItem.colorPattern;
-      const isSameShades = isEqual(safelistItem.shades, currentSafelistItem.shades);
+      const isSameProperty = item.property === currentItem.property;
+      const isSameColors = item.colorPattern === currentItem.colorPattern;
+      const isSameShades = isEqual(item.shades, currentItem.shades);
 
-      return !isSameItem && isSameColorProperty && isSameColors && isSameShades && safelistItem.variants;
+      return !isSameItem && isSameProperty && isSameColors && isSameShades;
     });
 
-    if (duplicateIndex !== -1) {
-      destructedSafelist[duplicateIndex].variants = [
-        ...new Set(...currentSafelistItem.variants, ...destructedSafelist[duplicateIndex].variants),
-      ];
-      destructedSafelist.splice(duplicateIndex, 1);
+    if (~duplicateIndex) {
+      const currentItemVariants = currentItem.variants;
+      const foundItemVariants = safelistData[duplicateIndex].variants || [];
+
+      safelistData[duplicateIndex].variants = [...new Set([...currentItemVariants, ...foundItemVariants])];
+      safelistData.splice(currentIndex, 1);
     }
   });
 
-  return destructedSafelist;
+  return safelistData;
 }
