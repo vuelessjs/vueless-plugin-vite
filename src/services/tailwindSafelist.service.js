@@ -35,7 +35,7 @@ export function clearTailwindSafelist() {
   process.env.VUELESS_SAFELIST = "";
 }
 
-export async function createTailwindSafelist(mode, env) {
+export async function createTailwindSafelist(mode, env, debug) {
   const storybookColors = { colors: BRAND_COLORS, isComponentExists: true };
 
   const safelist = [];
@@ -89,6 +89,11 @@ export async function createTailwindSafelist(mode, env) {
   }
 
   const mergedSafelist = mergeSafelistPatterns(safelist);
+
+  if (debug) {
+    // eslint-disable-next-line no-console
+    console.log("VUELESS_SAFELIST", mergedSafelist);
+  }
 
   process.env.VUELESS_SAFELIST = JSON.stringify(mergedSafelist);
   process.env.VUELESS_STRATEGY = vuelessConfig.strategy || "";

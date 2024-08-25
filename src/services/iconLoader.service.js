@@ -93,7 +93,7 @@ function findAndCopyIcons(files) {
             copyFile(iconName);
           }
         } catch (error) {
-          // console.log(error);
+          isDebug && console.log(error);
         }
 
         iconNameRegex.lastIndex = 0;
@@ -132,7 +132,7 @@ function findAndCopyIcons(files) {
           copyFile(iconName);
         }
       } catch (error) {
-        // console.log(error);
+        isDebug && console.log(error);
       }
 
       iconNameRegex.lastIndex = 0;

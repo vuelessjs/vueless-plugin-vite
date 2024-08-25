@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import fs from "fs";
 import { compileTemplate } from "vue/compiler-sfc";
 import { optimize as optimizeSvg } from "svgo";
@@ -21,7 +19,7 @@ const DEFAULT_SVGO_CONFIG = {
 };
 
 export async function loadSvg(id, options) {
-  const { defaultImport = "url", svgo = true, svgoConfig = DEFAULT_SVGO_CONFIG } = options;
+  const { defaultImport = "url", svgo = true, svgoConfig = DEFAULT_SVGO_CONFIG, debug = false } = options;
   const svgRegex = /\.svg(\?(raw|url|component|skipsvgo))?$/;
 
   if (!id.match(svgRegex)) {
@@ -37,12 +35,18 @@ export async function loadSvg(id, options) {
     return;
   }
 
+  if (debug) {
+    // eslint-disable-next-line no-console
+    console.log("iconPath:", path);
+  }
+
   try {
     svg = await fs.promises.readFile(path, "utf-8");
   } catch (exception) {
-    // define empty svg to prevent a UI crash.
+    // define an empty svg to prevent a UI crash.
     svg = `<svg xmlns="http://www.w3.org/2000/svg"></svg>`;
-    console.warn("\n", `${id} couldn't be loaded by vite-plugin-vue-vueless, fallback to default loader.`);
+    // eslint-disable-next-line no-console
+    console.warn("\n", `${id} couldn't be loaded by @vueless/plugin-vite.`);
   }
 
   if (importType === "raw") {
