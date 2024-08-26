@@ -106,11 +106,11 @@ function findAndCopyIcons(files) {
 
     copyIconsFromComponent(uIconNameRegex, uIconMatchNameArray);
 
-    /* UButton */
-    const uButtonIconNameRegex = /\w*(icon)\w*=\s*(['"])(.*?)\1/g;
-    const uButtonMatchNameArray = fileContents.match(/<UButton[^>]+>/g);
+    /* Vueless components */
+    const uComponentIconNameRegex = /\w*(icon)\w*=\s*(['"])(.*?)\1/g;
+    const uComponentMatchNameArray = fileContents.match(/<U\w*[^>]+>/g);
 
-    copyIconsFromComponent(uButtonIconNameRegex, uButtonMatchNameArray);
+    copyIconsFromComponent(uComponentIconNameRegex, uComponentMatchNameArray);
   });
 
   function copyIconsFromComponent(iconNameRegex, matchNameArray) {
