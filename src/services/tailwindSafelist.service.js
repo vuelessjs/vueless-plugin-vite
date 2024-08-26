@@ -182,7 +182,7 @@ function getComponentBrandColor(componentName) {
   const globalBrandColor = vuelessConfig.brand || "";
   const globalComponentConfig = vuelessConfig.component?.[componentName] || {};
 
-  return vuelessConfig.component ? globalComponentConfig.defaultVariants?.color : globalBrandColor;
+  return vuelessConfig.component ? globalComponentConfig.defaults?.color : globalBrandColor;
 }
 
 function isDefaultComponentConfig(filePath, componentName) {

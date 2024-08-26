@@ -68,7 +68,7 @@ export function removeIcons() {
 }
 
 function findAndCopyIcons(files) {
-  const defaultVariants = getMergedConfig();
+  const defaults = getMergedConfig();
   const safelistIcons = getSafelistIcons();
 
   safelistIcons.forEach((iconName) => {
@@ -154,9 +154,9 @@ function findAndCopyIcons(files) {
   function copyFile(name) {
     name = name.toLowerCase();
 
-    const library = defaultVariants.library;
-    const weight = defaultVariants.weight;
-    const style = defaultVariants.style;
+    const library = defaults.library;
+    const weight = defaults.weight;
+    const style = defaults.style;
 
     const require = createRequire(import.meta.url);
 
@@ -234,7 +234,7 @@ function getMergedConfig() {
     const defaultConfig = getDefaultConfigJson(defaultConfigFile);
     const globalConfig = vuelessConfig.component && vuelessConfig.component[ICON_COMPONENT_NAME];
 
-    return merge(globalConfig?.defaultVariants || {}, defaultConfig.defaultVariants);
+    return merge(globalConfig?.defaults || {}, defaultConfig.defaults);
   }
 }
 
