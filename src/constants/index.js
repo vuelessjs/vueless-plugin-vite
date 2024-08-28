@@ -9,7 +9,6 @@ export const components = {
   UDropdownButton: { folder: "ui.dropdown-button", safelist: ["UIcon"] },
   UDropdownBadge: { folder: "ui.dropdown-badge", safelist: ["UIcon"] },
   UDropdownLink: { folder: "ui.dropdown-link", safelist: ["UIcon"] },
-  UDropdownItem: { folder: "ui.dropdown-item" },
 
   /* Form Inputs & Controls */
   UInput: { folder: "ui.form-input" },
