@@ -100,25 +100,15 @@ function findAndCopyIcons(files) {
       }
     }
 
-    /* UIcon */
-    const uIconNameRegex = /\bname\s*=\s*(['"])(.*?)\1/g;
-    const uIconMatchNameArray = fileContents.match(/<UIcon[^>]+>/g);
+    /* Vueless components props */
+    const uComponentIconNamePattern = `\\b\\w*(name|icon)\\w*\\s*=\\s*(['"])(.*?)\\2`;
+    const uComponentIconNameArray = fileContents.match(new RegExp(uComponentIconNamePattern, "g"));
 
-    copyIconsFromComponent(uIconNameRegex, uIconMatchNameArray);
+    if (!uComponentIconNameArray) return;
 
-    /* Vueless components */
-    const uComponentIconNameRegex = /\w*(icon)\w*=\s*(['"])(.*?)\1/g;
-    const uComponentMatchNameArray = fileContents.match(/<U\w*[^>]+>/g);
-
-    copyIconsFromComponent(uComponentIconNameRegex, uComponentMatchNameArray);
-  });
-
-  function copyIconsFromComponent(iconNameRegex, matchNameArray) {
-    if (!matchNameArray) return;
-
-    for (const match of matchNameArray) {
-      const iconNameMatch = iconNameRegex.exec(match);
-      const iconName = iconNameMatch ? iconNameMatch[2] : null;
+    for (const match of uComponentIconNameArray) {
+      const groupMatch = match.match(new RegExp(uComponentIconNamePattern));
+      const iconName = groupMatch ? groupMatch[3] : null;
 
       try {
         if (!iconName) return;
@@ -134,10 +124,8 @@ function findAndCopyIcons(files) {
       } catch (error) {
         isDebug && console.log(error);
       }
-
-      iconNameRegex.lastIndex = 0;
     }
-  }
+  });
 
   function getTernaryValues(expression) {
     const [, values] = expression
