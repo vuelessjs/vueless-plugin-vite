@@ -29,7 +29,10 @@ const BRAND_COLORS = [
   "rose",
 ];
 
-const { default: vuelessConfig } = await import(path.join(process.cwd(), `vueless.config.js?${Date.now()}`));
+let vuelessConfig = {};
+
+/* Load Vueless config from the project root in IIEF (no top level await). */
+(async () => (vuelessConfig = (await import(`${process.cwd()}/vueless.config.js?${Date.now()}`)).default))();
 
 export function clearTailwindSafelist() {
   process.env.VUELESS_SAFELIST = "";
@@ -49,7 +52,16 @@ export async function createTailwindSafelist(mode, env, debug) {
   let srcVueFiles = [];
 
   if (!isVuelessEnv) {
-    srcVueFiles = await getDirFiles("src", ".vue");
+    srcVueFiles = [
+      /* Vue.js folders */
+      ...(await getDirFiles("src", ".vue")),
+      /* Nuxt.js folders */
+      ...(await getDirFiles("components", ".vue")),
+      ...(await getDirFiles("layouts", ".vue")),
+      ...(await getDirFiles("pages", ".vue")),
+      path.join(process.cwd(), "app.vue"),
+      path.join(process.cwd(), "error.vue"),
+    ];
   }
 
   const vuelessFiles = [...srcVueFiles, ...vuelessVueFiles, ...vuelessConfigFiles];

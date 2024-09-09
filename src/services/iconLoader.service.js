@@ -12,8 +12,10 @@ import fs from "fs";
 import path from "path";
 import { createRequire } from "module";
 
-/* Load Vueless config from the project root. */
-const { default: vuelessConfig } = await import(path.join(process.cwd(), `vueless.config.js?${Date.now()}`));
+let vuelessConfig = {};
+
+/* Load Vueless config from the project root in IIEF (no top level await). */
+(async () => (vuelessConfig = (await import(`${process.cwd()}/vueless.config.js?${Date.now()}`)).default))();
 
 const DEFAULT_ICONS_DIR = "./src/assets/icons";
 const VUELESS_ICONS_DIR = "./src/assets/icons/cache";
