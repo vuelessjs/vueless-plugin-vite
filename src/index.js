@@ -2,11 +2,11 @@
 
 import UnpluginVueComponents from "unplugin-vue-components/vite";
 
-import { addWebTypesToPackageJson } from "./services/common.service.js";
-import { createTailwindSafelist, clearTailwindSafelist } from "./services/tailwindSafelist.service.js";
-import { copyIcons, removeIcons } from "./services/iconLoader.service.js";
-import { loadSvg } from "./services/svgLoader.service.js";
-import { componentResolver, directiveResolver } from "./resolvers/vueless.resolver.js";
+import { addWebTypesToPackageJson } from "./utils/common.js";
+import { createTailwindSafelist, clearTailwindSafelist } from "./utils/tailwindSafelist.js";
+import { copyIcons, removeIcons } from "./utils/iconLoader.js";
+import { loadSvg } from "./utils/svgLoader.js";
+import { componentResolver, directiveResolver } from "./utils/vuelessResolver.js";
 
 /* Automatically importing Vueless components on demand */
 export const VuelessUnpluginComponents = (options) =>
@@ -40,10 +40,7 @@ export const Vueless = function (options = {}) {
         "process.env": {},
       },
       optimizeDeps: {
-        include: ["tailwindcss/colors"],
-      },
-      resolve: {
-        extensions: [".vue", ".mjs", ".js", ".ts", ".mdx"],
+        include: ["tailwindcss/colors.js"],
       },
     }),
 

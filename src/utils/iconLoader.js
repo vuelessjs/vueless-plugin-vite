@@ -20,8 +20,8 @@ let vuelessConfig = {};
 const DEFAULT_ICONS_DIR = "./src/assets/icons";
 const VUELESS_ICONS_DIR = "./src/assets/icons/cache";
 const PROJECT_ICONS_DIR = "./node_modules/vueless/assets/icons/cache";
-const DEFAULT_CONFIG_PATH = "ui.image-icon/configs/default.config.js";
-const STORYBOOK_STORY_EXTENSION = ".stories.js";
+const DEFAULT_CONFIG_PATH = "ui.image-icon/config.js";
+const STORYBOOK_STORY_EXTENSION = "stories.js";
 const ICON_COMPONENT_NAME = "UIcon";
 
 let isDebug = false;

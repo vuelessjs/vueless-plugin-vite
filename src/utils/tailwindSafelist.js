@@ -1,10 +1,10 @@
 import path from "node:path";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { getDirFiles } from "./common.service.js";
+import { getDirFiles } from "./common.js";
 import { isEqual } from "lodash-es";
 
-import { components } from "../constants/index.js";
+import { components } from "../constants.js";
 
 const BRAND_COLORS = [
   // grayscale - may be needed when `grayscale` variant will contain `{color}` variable.
@@ -48,7 +48,7 @@ export async function createTailwindSafelist(mode, env, debug) {
   const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless";
 
   const vuelessVueFiles = await getDirFiles(vuelessFilePath, ".vue");
-  const vuelessConfigFiles = await getDirFiles(vuelessFilePath, ".config.js");
+  const vuelessConfigFiles = await getDirFiles(vuelessFilePath, "/config.js");
   let srcVueFiles = [];
 
   if (!isVuelessEnv) {
@@ -198,9 +198,9 @@ function getComponentBrandColor(componentName) {
 }
 
 function isDefaultComponentConfig(filePath, componentName) {
-  const componentDirName = filePath.split(path.sep).at(-3);
+  const componentDirName = filePath.split(path.sep).at(-2);
 
-  return componentDirName === components[componentName].folder && filePath.endsWith("default.config.js");
+  return componentDirName === components[componentName].folder && filePath.endsWith("/config.js");
 }
 
 function getSafelistColorsFromConfig(componentName) {

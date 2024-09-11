@@ -9,7 +9,7 @@
  https://github.com/unplugin/unplugin-vue-components?tab=readme-ov-file#importing-from-ui-libraries
  */
 
-import { components } from "../constants/index.js";
+import { components } from "../constants.js";
 
 export function componentResolver(componentName) {
   const folder = components[componentName]?.folder;
@@ -22,10 +22,8 @@ export function componentResolver(componentName) {
 export const directiveResolver = {
   type: "directive",
   resolve(name) {
-    const folderName = name.charAt(0).toLowerCase() + name.slice(1);
-
     return {
-      from: `vueless/directive.${folderName}`,
+      from: `vueless/directives/v${name}.js`, // TODO: Check if it works.
     };
   },
 };
