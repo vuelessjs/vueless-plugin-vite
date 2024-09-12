@@ -15,7 +15,7 @@ export function componentResolver(componentName) {
   const folder = components[componentName]?.folder;
 
   if (folder) {
-    return { from: `vueless/${folder}` };
+    return { from: `vueless/${folder}/${componentName}.vue` };
   }
 }
 
@@ -23,7 +23,7 @@ export const directiveResolver = {
   type: "directive",
   resolve(name) {
     return {
-      from: `vueless/directives/v${name}.js`, // TODO: Check if it works.
+      from: `vueless/directives/v${name}.js`,
     };
   },
 };
