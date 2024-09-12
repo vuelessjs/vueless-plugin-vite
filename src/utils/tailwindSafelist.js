@@ -31,7 +31,7 @@ const BRAND_COLORS = [
 
 let vuelessConfig = {};
 
-/* Load Vueless config from the project root in IIEF (no top level await). */
+/* Load Vueless config from the project root in IIFE (no top level await). */
 (async () => (vuelessConfig = (await import(`${process.cwd()}/vueless.config.js?${Date.now()}`)).default))();
 
 export function clearTailwindSafelist() {
