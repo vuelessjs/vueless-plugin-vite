@@ -34,6 +34,8 @@ export async function createTailwindSafelist(mode, env, debug) {
       ...(await getDirFiles("pages", ".vue")),
       path.join(process.cwd(), "app.vue"),
       path.join(process.cwd(), "error.vue"),
+      /* Nuxt.js playground files (nuxt module) */
+      path.join(process.cwd(), "playground", "app.vue"),
     ];
   }
 

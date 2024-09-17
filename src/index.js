@@ -22,6 +22,8 @@ export const VuelessUnpluginComponents = (options) =>
   – Loads SVG images as a Vue components.
  */
 export const Vueless = function (options = {}) {
+  const isNuxtModule = options.mode === "nuxt-module";
+
   /* if server stopped by developer (Ctrl+C) */
   process.on("SIGINT", () => {
     /* remove dynamically copied icons */
@@ -46,7 +48,7 @@ export const Vueless = function (options = {}) {
 
     configResolved: async (config) => {
       /* collect used in project colors for tailwind safelist */
-      await createTailwindSafelist(options.mode, options.env, options.debug);
+      !isNuxtModule && (await createTailwindSafelist(options.mode, options.env, options.debug));
 
       if (config.command === "build") {
         /* dynamically copy used icons before build */
@@ -70,7 +72,7 @@ export const Vueless = function (options = {}) {
     load: async (id) => await loadSvg(id, options),
 
     handleHotUpdate: async ({ file, read }) => {
-      if (file.endsWith(".js") || file.endsWith(".ts") || file.endsWith(".vue")) {
+      if (!isNuxtModule && [".js", ".ts", ".vue"].some((ext) => file.endsWith(ext))) {
         const fileContent = await read();
 
         if (fileContent.includes("safelist:") || fileContent.includes("color=")) {
