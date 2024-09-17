@@ -14,8 +14,14 @@ import { createRequire } from "module";
 
 let vuelessConfig = {};
 
-/* Load Vueless config from the project root in IIFE (no top level await). */
-(async () => (vuelessConfig = (await import(`${process.cwd()}/vueless.config.js?${Date.now()}`)).default))();
+/* Load Vueless config from the project root in IIFE (no top-level await). */
+(async () => {
+  try {
+    vuelessConfig = (await import(`${process.cwd()}/vueless.config.js`)).default;
+  } catch (error) {
+    vuelessConfig = {};
+  }
+})();
 
 const DEFAULT_ICONS_DIR = "./src/assets/icons";
 const VUELESS_ICONS_DIR = "./src/assets/icons/cache";

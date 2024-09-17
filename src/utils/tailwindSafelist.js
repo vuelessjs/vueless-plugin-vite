@@ -8,8 +8,14 @@ import { COMPONENTS, BRAND_COLORS } from "../constants.js";
 
 let vuelessConfig = {};
 
-/* Load Vueless config from the project root in IIFE (no top level await). */
-(async () => (vuelessConfig = (await import(`${process.cwd()}/vueless.config.js?${Date.now()}`)).default))();
+/* Load Vueless config from the project root in IIFE (no top-level await). */
+(async () => {
+  try {
+    vuelessConfig = (await import(`${process.cwd()}/vueless.config.js`)).default;
+  } catch (error) {
+    vuelessConfig = {};
+  }
+})();
 
 export function clearTailwindSafelist() {
   process.env.VUELESS_SAFELIST = "";
