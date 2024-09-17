@@ -1,4 +1,4 @@
-export const components = {
+export const COMPONENTS = {
   /* Buttons & Links */
   UButton: { folder: "ui.button", safelist: true },
   ULink: { folder: "ui.button-link", safelist: true },
@@ -79,3 +79,26 @@ export const components = {
   /* Other */
   UDot: { folder: "ui.other-dot", safelist: true },
 };
+
+export const BRAND_COLORS = [
+  // grayscale - may be needed when `grayscale` variant will contain `{color}` variable.
+  "brand",
+  "gray",
+  "red",
+  "orange",
+  "amber",
+  "yellow",
+  "lime",
+  "green",
+  "emerald",
+  "teal",
+  "cyan",
+  "sky",
+  "blue",
+  "indigo",
+  "violet",
+  "purple",
+  "fuchsia",
+  "pink",
+  "rose",
+];

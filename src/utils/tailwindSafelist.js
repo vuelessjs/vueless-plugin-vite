@@ -4,30 +4,7 @@ import { readFile } from "node:fs/promises";
 import { getDirFiles } from "./common.js";
 import { isEqual } from "lodash-es";
 
-import { components } from "../constants.js";
-
-const BRAND_COLORS = [
-  // grayscale - may be needed when `grayscale` variant will contain `{color}` variable.
-  "brand",
-  "gray",
-  "red",
-  "orange",
-  "amber",
-  "yellow",
-  "lime",
-  "green",
-  "emerald",
-  "teal",
-  "cyan",
-  "sky",
-  "blue",
-  "indigo",
-  "violet",
-  "purple",
-  "fuchsia",
-  "pink",
-  "rose",
-];
+import { COMPONENTS, BRAND_COLORS } from "../constants.js";
 
 let vuelessConfig = {};
 
@@ -39,10 +16,6 @@ export function clearTailwindSafelist() {
 }
 
 export async function createTailwindSafelist(mode, env, debug) {
-  const storybookColors = { colors: BRAND_COLORS, isComponentExists: true };
-
-  const safelist = [];
-
   const isStorybookMode = mode === "storybook";
   const isVuelessEnv = env === "vueless";
   const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless";
@@ -53,9 +26,9 @@ export async function createTailwindSafelist(mode, env, debug) {
 
   if (!isVuelessEnv) {
     srcVueFiles = [
-      /* Vue.js folders */
+      /* Vue.js files */
       ...(await getDirFiles("src", ".vue")),
-      /* Nuxt.js folders */
+      /* Nuxt.js files */
       ...(await getDirFiles("components", ".vue")),
       ...(await getDirFiles("layouts", ".vue")),
       ...(await getDirFiles("pages", ".vue")),
@@ -66,7 +39,10 @@ export async function createTailwindSafelist(mode, env, debug) {
 
   const vuelessFiles = [...srcVueFiles, ...vuelessVueFiles, ...vuelessConfigFiles];
 
-  const componentsWithSafelist = Object.entries(components)
+  const storybookColors = { colors: BRAND_COLORS, isComponentExists: true };
+  const safelist = [];
+
+  const componentsWithSafelist = Object.entries(COMPONENTS)
     .filter(([, value]) => value.safelist)
     .map(([key, value]) => ({ name: key, safelist: value.safelist }));
 
@@ -200,7 +176,7 @@ function getComponentBrandColor(componentName) {
 function isDefaultComponentConfig(filePath, componentName) {
   const componentDirName = filePath.split(path.sep).at(-2);
 
-  return componentDirName === components[componentName].folder && filePath.endsWith("/config.js");
+  return componentDirName === COMPONENTS[componentName].folder && filePath.endsWith("/config.js");
 }
 
 function getSafelistColorsFromConfig(componentName) {
