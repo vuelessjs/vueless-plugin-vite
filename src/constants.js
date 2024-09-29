@@ -67,7 +67,6 @@ export const COMPONENTS = {
   /* Navigation */
   UTab: { folder: "ui.navigation-tab" },
   UTabs: { folder: "ui.navigation-tabs" },
-  UStepper: { folder: "ui.navigation-stepper", safelist: true },
   UProgress: { folder: "ui.navigation-progress", safelist: true },
   UPagination: { folder: "ui.navigation-pagination" },
 
