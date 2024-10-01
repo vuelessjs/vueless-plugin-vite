@@ -1,3 +1,5 @@
+import path from "node:path";
+
 export const COMPONENTS = {
   /* Buttons & Links */
   UButton: { folder: "ui.button", safelist: true },
@@ -78,6 +80,15 @@ export const COMPONENTS = {
   /* Other */
   UDot: { folder: "ui.other-dot", safelist: true },
 };
+
+export const defaultInclude = [
+  "components",
+  "layouts",
+  "pages",
+  path.join(process.cwd(), "app.vue"),
+  path.join(process.cwd(), "error.vue"),
+  path.join(process.cwd(), "playground", "app.vue"),
+];
 
 export const BRAND_COLORS = [
   // grayscale - may be needed when `grayscale` variant will contain `{color}` variable.

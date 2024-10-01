@@ -7,6 +7,7 @@ import { createTailwindSafelist, clearTailwindSafelist } from "./utils/tailwindS
 import { copyIcons, removeIcons } from "./utils/iconLoader.js";
 import { loadSvg } from "./utils/svgLoader.js";
 import { componentResolver, directiveResolver } from "./utils/vuelessResolver.js";
+import { defaultInclude } from "./constants.js";
 
 /* Automatically importing Vueless components on demand */
 export const VuelessUnpluginComponents = (options) =>
@@ -22,14 +23,21 @@ export const VuelessUnpluginComponents = (options) =>
   – Loads SVG images as a Vue components.
  */
 export const Vueless = function (options = {}) {
-  const isNuxtModule = options.mode === "nuxt-module";
+  const { mode, debug, env, include } = options;
+
+  console.log(options);
+
+  const isNuxt = mode === "nuxt-module";
+  const srcDir = isNuxt ? process.cwd() : "src";
+
+  const targetFiles = [srcDir, ...(include || []), ...defaultInclude];
 
   /* if server stopped by developer (Ctrl+C) */
   process.on("SIGINT", () => {
     /* remove dynamically copied icons */
-    removeIcons(options.debug);
+    removeIcons(debug);
     /* clear tailwind safelist */
-    clearTailwindSafelist(options.debug);
+    clearTailwindSafelist(debug);
     process.exit(0);
   });
 
@@ -48,36 +56,38 @@ export const Vueless = function (options = {}) {
 
     configResolved: async (config) => {
       /* collect used in project colors for tailwind safelist */
-      !isNuxtModule && (await createTailwindSafelist(options.mode, options.env, options.debug));
+      if (!isNuxt) {
+        await createTailwindSafelist({ mode, env, debug, targetFiles });
+      }
 
       if (config.command === "build") {
         /* dynamically copy used icons before build */
-        copyIcons("vuelessIcons", options.env, options.debug);
-        copyIcons(options.mode, options.env, options.debug);
+        copyIcons("vuelessIcons", env, debug);
+        copyIcons(mode, env, debug);
       }
 
       if (config.command === "dev" || config.command === "serve") {
         /* remove dynamically copied icons on dev server start */
-        removeIcons(options.debug);
+        removeIcons(debug);
 
         /* add web-types config to the package.json */
-        addWebTypesToPackageJson(options.env, options.debug);
+        addWebTypesToPackageJson(env, debug);
       }
     },
 
     /* remove dynamically copied icons after build */
-    buildEnd: () => removeIcons(options.debug),
+    buildEnd: () => removeIcons(debug),
 
     /* load SVG images as a Vue components */
     load: async (id) => await loadSvg(id, options),
 
     handleHotUpdate: async ({ file, read }) => {
-      if (!isNuxtModule && [".js", ".ts", ".vue"].some((ext) => file.endsWith(ext))) {
+      if (!isNuxt && [".js", ".ts", ".vue"].some((ext) => file.endsWith(ext))) {
         const fileContent = await read();
 
         if (fileContent.includes("safelist:") || fileContent.includes("color=")) {
           /* collect used in project colors for tailwind safelist */
-          await createTailwindSafelist(options.mode, options.env, options.debug);
+          await createTailwindSafelist({ mode, env, debug, targetFiles });
         }
       }
     },

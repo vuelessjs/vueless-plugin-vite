@@ -2,14 +2,15 @@
  This scrypt find icon names from the UIcon props and objects across the project
  and copy SVG icons from the default icons library (@material-symbols or other from config)
  to the ".../cache" folder.
-
+ 
  Those icons will be used only in the build stage.
  The script is needed to avoid all @material-symbols icons set in the project bundle.
  */
 
 /* eslint-disable no-console */
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
+import { getDirFiles } from "./common.js";
 import { createRequire } from "module";
 
 let vuelessConfig = {};
@@ -38,7 +39,7 @@ let isVuelessIconsMode = false;
 let iconCacheDir = PROJECT_ICONS_DIR;
 
 // perform icons copy magick... ✨
-export function copyIcons(mode = "", env, debug) {
+export async function copyIcons({ mode = "", env, debug, targetFiles = [] } = {}) {
   isDebug = debug || false;
   isVuelessEnv = env === "vueless";
   isDefaultMode = mode === "";
@@ -51,17 +52,25 @@ export function copyIcons(mode = "", env, debug) {
   removeIcons();
 
   if (isStorybookMode) {
-    findAndCopyIcons([...getFiles("src", STORYBOOK_STORY_EXTENSION)]);
+    const storyBookFiles = await getDirFiles("src", STORYBOOK_STORY_EXTENSION);
+
+    findAndCopyIcons([storyBookFiles]);
   }
 
   if (isVuelessIconsMode || isDefaultMode) {
-    findAndCopyIcons([
-      ...getFiles("src", ".vue"),
-      ...getFiles("src", ".js"),
-      ...getFiles("src", ".ts"),
-      "vueless.config.js",
-      "vueless.config.ts",
-    ]);
+    const vueFiles = targetFiles.map((componentPath) => getDirFiles(componentPath, ".vue"));
+
+    const jsFiles = targetFiles.map((jsFilePath) =>
+      getDirFiles(jsFilePath, ".js", { exclude: [STORYBOOK_STORY_EXTENSION] }),
+    );
+
+    const tsFiles = targetFiles.map((jsFilePath) =>
+      getDirFiles(jsFilePath, ".ts", { exclude: [STORYBOOK_STORY_EXTENSION] }),
+    );
+
+    const iconFiles = await Promise.all([...vueFiles, ...jsFiles, ...tsFiles]);
+
+    findAndCopyIcons([...iconFiles.flat(), "vueless.config.js", "vueless.config.ts"]);
   }
 }
 
@@ -158,22 +167,23 @@ function findAndCopyIcons(files) {
 
     /* eslint-disable prettier/prettier */
     const libraries = {
-      "vueless": { // @material-symbols icons which used across the components.
+      vueless: {
+        // @material-symbols icons which used across the components.
         source: `${library}/svg-${weight}/${style}/${name}.svg`,
-        destination: `${iconCacheDir}/${name}.svg`,
+        destination: `${iconCacheDir}/${name}.svg`
       },
       "@material-symbols": {
         source: `${library}/svg-${weight}/${style}/${name}.svg`,
-        destination: `${iconCacheDir}/${library}/svg-${weight}/${style}/${name}.svg`,
+        destination: `${iconCacheDir}/${library}/svg-${weight}/${style}/${name}.svg`
       },
       "bootstrap-icons": {
         source: `${library}/icons/${name}.svg`,
-        destination: `${iconCacheDir}/${library}/icons/${name}.svg`,
+        destination: `${iconCacheDir}/${library}/icons/${name}.svg`
       },
-      "heroicons": {
+      heroicons: {
         source: `${library}/24/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
-        destination: `${iconCacheDir}/24/${style}/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
-      },
+        destination: `${iconCacheDir}/24/${style}/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`
+      }
     };
     /* eslint-enable prettier/prettier */
 
@@ -192,29 +202,6 @@ function findAndCopyIcons(files) {
       }
     });
   }
-}
-
-function getFiles(dirPath, extension, fileList) {
-  const files = fs.readdirSync(dirPath);
-
-  fileList = fileList || [];
-
-  files.forEach((file) => {
-    const filePath = path.join(dirPath, file);
-    const stat = fs.statSync(filePath);
-
-    if (stat.isDirectory()) {
-      fileList = getFiles(filePath, extension, fileList);
-    } else {
-      const isStorybookStory = filePath.endsWith(STORYBOOK_STORY_EXTENSION) && extension !== STORYBOOK_STORY_EXTENSION;
-
-      if (filePath.endsWith(extension) && !isStorybookStory) {
-        fileList.push(filePath);
-      }
-    }
-  });
-
-  return fileList;
 }
 
 function getSafelistIcons() {
