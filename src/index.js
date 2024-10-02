@@ -1,13 +1,10 @@
-/* eslint-disable no-console */
-
 import UnpluginVueComponents from "unplugin-vue-components/vite";
 
-import { addWebTypesToPackageJson } from "./utils/common.js";
+import { addWebTypesToPackageJson, getNuxtFiles } from "./utils/common.js";
 import { createTailwindSafelist, clearTailwindSafelist } from "./utils/tailwindSafelist.js";
 import { copyIcons, removeIcons } from "./utils/iconLoader.js";
 import { loadSvg } from "./utils/svgLoader.js";
 import { componentResolver, directiveResolver } from "./utils/vuelessResolver.js";
-import { defaultInclude } from "./constants.js";
 
 /* Automatically importing Vueless components on demand */
 export const VuelessUnpluginComponents = (options) =>
@@ -25,12 +22,10 @@ export const VuelessUnpluginComponents = (options) =>
 export const Vueless = function (options = {}) {
   const { mode, debug, env, include } = options;
 
-  console.log(options);
-
   const isNuxt = mode === "nuxt-module";
   const srcDir = isNuxt ? process.cwd() : "src";
 
-  const targetFiles = [srcDir, ...(include || []), ...defaultInclude];
+  const targetFiles = [srcDir, ...(include || []), ...(isNuxt ? getNuxtFiles() : [])];
 
   /* if server stopped by developer (Ctrl+C) */
   process.on("SIGINT", () => {

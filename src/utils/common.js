@@ -53,3 +53,14 @@ export async function getDirFiles(dirPath, ext, { recursive = true, exclude = []
 
   return filteredFiles.map((fileName) => path.join(dirPath, fileName));
 }
+
+export function getNuxtFiles() {
+  return [
+    "components",
+    "layouts",
+    "pages",
+    path.join(process.cwd(), "app.vue"),
+    path.join(process.cwd(), "error.vue"),
+    path.join(process.cwd(), "playground", "app.vue"),
+  ];
+}
