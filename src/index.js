@@ -1,6 +1,6 @@
 import UnpluginVueComponents from "unplugin-vue-components/vite";
 
-import { addWebTypesToPackageJson, getNuxtFiles } from "./utils/common.js";
+import { addWebTypesToPackageJson, getNuxtFiles, getVueSourceFile } from "./utils/common.js";
 import { createTailwindSafelist, clearTailwindSafelist } from "./utils/tailwindSafelist.js";
 import { copyIcons, removeIcons } from "./utils/iconLoader.js";
 import { loadSvg } from "./utils/svgLoader.js";
@@ -23,7 +23,7 @@ export const Vueless = function (options = {}) {
   const { mode, debug, env, include } = options;
 
   const isNuxt = mode === "nuxt-module";
-  const srcDir = isNuxt ? process.cwd() : "src";
+  const srcDir = isNuxt ? process.cwd() : getVueSourceFile();
 
   const targetFiles = [srcDir, ...(include || []), ...(isNuxt ? getNuxtFiles() : [])];
 

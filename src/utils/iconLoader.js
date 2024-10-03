@@ -167,23 +167,22 @@ function findAndCopyIcons(files) {
 
     /* eslint-disable prettier/prettier */
     const libraries = {
-      vueless: {
-        // @material-symbols icons which used across the components.
+      "vueless": { // @material-symbols icons which used across the components.
         source: `${library}/svg-${weight}/${style}/${name}.svg`,
-        destination: `${iconCacheDir}/${name}.svg`
+        destination: `${iconCacheDir}/${name}.svg`,
       },
       "@material-symbols": {
         source: `${library}/svg-${weight}/${style}/${name}.svg`,
-        destination: `${iconCacheDir}/${library}/svg-${weight}/${style}/${name}.svg`
+        destination: `${iconCacheDir}/${library}/svg-${weight}/${style}/${name}.svg`,
       },
       "bootstrap-icons": {
         source: `${library}/icons/${name}.svg`,
-        destination: `${iconCacheDir}/${library}/icons/${name}.svg`
+        destination: `${iconCacheDir}/${library}/icons/${name}.svg`,
       },
-      heroicons: {
+      "heroicons": {
         source: `${library}/24/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
-        destination: `${iconCacheDir}/24/${style}/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`
-      }
+        destination: `${iconCacheDir}/24/${style}/${name.endsWith("-fill") ? "solid" : "outline"}/${name}.svg`,
+      },
     };
     /* eslint-enable prettier/prettier */
 
