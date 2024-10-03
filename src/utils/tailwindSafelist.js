@@ -21,7 +21,7 @@ export function clearTailwindSafelist() {
   process.env.VUELESS_SAFELIST = "";
 }
 
-export async function createTailwindSafelist(mode, env, debug) {
+export async function createTailwindSafelist({ mode, env, debug, targetFiles = [] } = {}) {
   const isStorybookMode = mode === "storybook";
   const isVuelessEnv = env === "vueless";
   const vuelessFilePath = isVuelessEnv ? "src" : "node_modules/vueless";
@@ -31,18 +31,9 @@ export async function createTailwindSafelist(mode, env, debug) {
   let srcVueFiles = [];
 
   if (!isVuelessEnv) {
-    srcVueFiles = [
-      /* Vue.js files */
-      ...(await getDirFiles("src", ".vue")),
-      /* Nuxt.js files */
-      ...(await getDirFiles("components", ".vue")),
-      ...(await getDirFiles("layouts", ".vue")),
-      ...(await getDirFiles("pages", ".vue")),
-      path.join(process.cwd(), "app.vue"),
-      path.join(process.cwd(), "error.vue"),
-      /* Nuxt.js playground files (nuxt module) */
-      path.join(process.cwd(), "playground", "app.vue"),
-    ];
+    srcVueFiles = await Promise.all(targetFiles.map((componentPath) => getDirFiles(componentPath, ".vue")));
+
+    srcVueFiles = srcVueFiles.flat();
   }
 
   const vuelessFiles = [...srcVueFiles, ...vuelessVueFiles, ...vuelessConfigFiles];

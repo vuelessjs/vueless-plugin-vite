@@ -24,12 +24,53 @@ export function addWebTypesToPackageJson(env) {
   }
 }
 
-export async function getDirFiles(dirPath, ext, { recursive = true } = {}) {
-  if (!fs.existsSync(dirPath)) {
-    return [];
+export async function getDirFiles(dirPath, ext, { recursive = true, exclude = [] } = {}) {
+  let fileNames = [];
+
+  try {
+    fileNames = await readdir(dirPath, { recursive });
+  } catch (error) {
+    if (error.code === "ENOTDIR") {
+      fileNames = [dirPath.split(path.sep).at(-1)];
+      dirPath = dirPath.split(path.sep).slice(0, -1).join(path.sep);
+    } else if (error.code === "ENOENT") {
+      fileNames = [];
+    } else {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
   }
 
-  const fileNames = await readdir(dirPath, { recursive });
+  const excludeDirs = exclude.filter((excludeItem) => !excludeItem.startsWith("."));
+  const excludeExts = exclude.filter((excludeItem) => excludeItem.startsWith("."));
 
-  return fileNames.filter((fileName) => fileName.endsWith(ext)).map((fileName) => path.join(dirPath, fileName));
+  const filteredFiles = fileNames.filter((fileName) => {
+    const isRightExt = fileName.endsWith(ext) && !excludeExts.some((excludeExt) => fileName.endsWith(excludeExt));
+    const isExcludeDir = excludeDirs.some((excludeDir) => fileName.includes(excludeDir));
+
+    return isRightExt && !isExcludeDir;
+  });
+
+  return filteredFiles.map((fileName) => path.join(dirPath, fileName));
+}
+
+export function getNuxtFiles() {
+  return [
+    path.join(process.cwd(), "composables"),
+    path.join(process.cwd(), "components"),
+    path.join(process.cwd(), "layouts"),
+    path.join(process.cwd(), "pages"),
+    path.join(process.cwd(), "plugins"),
+    path.join(process.cwd(), "utils"),
+    path.join(process.cwd(), "Error.vue"),
+    path.join(process.cwd(), "App.vue"),
+    path.join(process.cwd(), "Error.vue"),
+    path.join(process.cwd(), "app.vue"),
+    path.join(process.cwd(), "error.vue"),
+    path.join(process.cwd(), "playground", "app.vue"),
+  ];
+}
+
+export function getVueSourceFile() {
+  return path.join(process.cwd(), "src");
 }
