@@ -1,3 +1,10 @@
+/**
+ * Config for the components autoload and color safelisting.
+ * – folder: component folder (required).
+ * – safelist: used to perform color safelisting logic:
+ * –– `true`: if the component config contains dynamic colors like `bg-{color}-600`.
+ * –– `array` (of nested component names which already have `safelist: true` in this config).
+ */
 export const COMPONENTS = {
   /* Buttons & Links */
   UButton: { folder: "ui.button", safelist: true },
@@ -72,13 +79,16 @@ export const COMPONENTS = {
 
   /* Loaders and Skeletons */
   ULoader: { folder: "ui.loader", safelist: true },
-  ULoaderTop: { folder: "ui.loader-top", safelist: true },
-  ULoaderRendering: { folder: "ui.loader-rendering" },
+  ULoaderProgress: { folder: "ui.loader-progress", safelist: true },
+  ULoaderOverlay: { folder: "ui.loader-overlay", safelist: true },
 
   /* Other */
   UDot: { folder: "ui.other-dot", safelist: true },
 };
 
+/**
+ * List of supported colors.
+ */
 export const BRAND_COLORS = [
   // grayscale - may be needed when `grayscale` variant will contain `{color}` variable.
   "brand",
