@@ -57,8 +57,8 @@ export const Vueless = function (options = {}) {
 
       if (config.command === "build") {
         /* dynamically copy used icons before build */
-        await copyIcons({ mode: "vuelessIcons", env, debug: false, targetFiles });
-        await copyIcons({ mode, env, debug: false, targetFiles });
+        await copyIcons({ mode: "vuelessIcons", env, debug, targetFiles });
+        await copyIcons({ mode, env, debug, targetFiles });
       }
 
       if (config.command === "dev" || config.command === "serve") {
