@@ -57,7 +57,7 @@ export async function copyIcons({ mode = "", env, debug, targetFiles = [] } = {}
     findAndCopyIcons([storyBookFiles]);
   }
 
-  if (isVuelessIconsMode || isDefaultMode) {
+  if (isVuelessIconsMode || isDefaultMode || isStorybookMode) {
     const vueFiles = targetFiles.map((componentPath) => getDirFiles(componentPath, ".vue"));
 
     const jsFiles = targetFiles.map((jsFilePath) =>
@@ -93,7 +93,7 @@ function findAndCopyIcons(files) {
     copyFile(iconName, true);
   });
 
-  files.forEach(async (file) => {
+  files.forEach((file) => {
     const fileContents = fs.existsSync(file) ? fs.readFileSync(file).toString() : "";
 
     /* Objects across the project */
