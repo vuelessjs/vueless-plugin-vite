@@ -11,7 +11,13 @@ let vuelessConfig = {};
 /* Load Vueless config from the project root in IIFE (no top-level await). */
 (async () => {
   try {
-    vuelessConfig = (await import(`${process.cwd()}/vueless.config.js`)).default;
+    const filePath = `${process.cwd()}/vueless.config`;
+
+    vuelessConfig = (await import(`${filePath}.js`)).default;
+
+    if (!vuelessConfig) {
+      vuelessConfig = (await import(`${filePath}.ts`)).default;
+    }
   } catch (error) {
     vuelessConfig = {};
   }
