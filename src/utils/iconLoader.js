@@ -71,7 +71,7 @@ export async function copyIcons({ mode = "", env, debug, targetFiles = [] } = {}
     );
 
     const tsFiles = targetFiles.map((tsFilePath) =>
-      getDirFiles(tsFilePath, ".ts", { exclude: [STORYBOOK_STORY_EXTENSION] }),
+      getDirFiles(tsFilePath, ".ts", { exclude: [STORYBOOK_STORY_EXTENSION, ".d.ts"] }),
     );
 
     const iconFiles = await Promise.all([...vueFiles, ...jsFiles, ...tsFiles]);
