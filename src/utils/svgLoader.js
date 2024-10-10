@@ -1,4 +1,5 @@
-import fs from "fs";
+import fs from "node:fs";
+import path from "node:path";
 import { compileTemplate } from "vue/compiler-sfc";
 import { optimize as optimizeSvg } from "svgo";
 
@@ -27,21 +28,24 @@ export async function loadSvg(id, options) {
   }
 
   let svg;
-  const [path, query] = id.split("?", 2);
+  let [svgPath, query] = id.split("?", 2);
   const importType = query || defaultImport;
 
+  // clear svg path from prefix if exist
+  svgPath = path.join(process.cwd(), svgPath.replace("/__skip_vite/", ""));
+
   // use default svg loader
-  if (importType === "url" && !path.includes(".generated")) {
+  if (importType === "url" && !svgPath.includes(".generated")) {
     return;
   }
 
   if (debug) {
     // eslint-disable-next-line no-console
-    console.log("iconPath:", path);
+    console.log("iconPath:", svgPath);
   }
 
   try {
-    svg = await fs.promises.readFile(path, "utf-8");
+    svg = await fs.promises.readFile(svgPath, "utf-8");
   } catch (exception) {
     // define an empty svg to prevent a UI crash.
     svg = `<svg xmlns="http://www.w3.org/2000/svg"></svg>`;
@@ -56,7 +60,7 @@ export async function loadSvg(id, options) {
   if (svgo !== false && query !== "skipsvgo") {
     svg = optimizeSvg(svg, {
       ...svgoConfig,
-      path,
+      svgPath,
     }).data;
   }
 
@@ -66,7 +70,7 @@ export async function loadSvg(id, options) {
   const { code } = compileTemplate({
     id: JSON.stringify(id),
     source: svg,
-    filename: path,
+    filename: svgPath,
     transformAssetUrls: false,
   });
 
