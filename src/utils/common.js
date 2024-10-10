@@ -1,5 +1,5 @@
 import path from "path";
-import fs from "fs";
+import fs, { statSync } from "fs";
 
 import { readdir } from "node:fs/promises";
 
@@ -51,7 +51,9 @@ export async function getDirFiles(dirPath, ext, { recursive = true, exclude = []
     return isRightExt && !isExcludeDir;
   });
 
-  return filteredFiles.map((fileName) => path.join(dirPath, fileName));
+  return filteredFiles
+    .map((fileName) => path.join(dirPath, fileName))
+    .filter((filePath) => !statSync(filePath).isDirectory());
 }
 
 export function getNuxtFiles() {
