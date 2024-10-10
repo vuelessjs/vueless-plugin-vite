@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import path from "node:path";
 import { compileTemplate } from "vue/compiler-sfc";
 import { optimize as optimizeSvg } from "svgo";
 
@@ -32,7 +31,7 @@ export async function loadSvg(id, options) {
   const importType = query || defaultImport;
 
   // clear svg path from prefix if exist
-  svgPath = path.join(process.cwd(), svgPath.replace("/__skip_vite/", ""));
+  svgPath = svgPath.replace("/__skip_vite/", "");
 
   // use default svg loader
   if (importType === "url" && !svgPath.includes(".generated")) {
