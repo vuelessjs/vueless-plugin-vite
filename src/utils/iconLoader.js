@@ -65,14 +65,8 @@ export async function copyIcons({ mode = "", env, debug, targetFiles = [] } = {}
 
   if (isVuelessIconsMode || isDefaultMode || isStorybookMode) {
     const vueFiles = targetFiles.map((componentPath) => getDirFiles(componentPath, ".vue"));
-
-    const jsFiles = targetFiles.map((jsFilePath) =>
-      getDirFiles(jsFilePath, ".js", { exclude: [STORYBOOK_STORY_EXTENSION] }),
-    );
-
-    const tsFiles = targetFiles.map((tsFilePath) =>
-      getDirFiles(tsFilePath, ".ts", { exclude: [STORYBOOK_STORY_EXTENSION, ".d.ts"] }),
-    );
+    const jsFiles = targetFiles.map((jsFilePath) => getDirFiles(jsFilePath, ".js"));
+    const tsFiles = targetFiles.map((tsFilePath) => getDirFiles(tsFilePath, ".ts", { exclude: [".d.ts"] }));
 
     const iconFiles = await Promise.all([...vueFiles, ...jsFiles, ...tsFiles]);
 
