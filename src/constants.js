@@ -1,13 +1,13 @@
 /**
  * Config for the components autoload and color safelisting.
- * – folder: component folder (required).
+ * – folder: component folder (*required).
  * – safelist: used to perform color safelisting logic:
  * –– `true`: if the component config contains dynamic colors like `bg-{color}-600`.
  * –– `array` (of nested component names which already have `safelist: true` in this config).
  */
 export const COMPONENTS = {
   /* Buttons & Links */
-  UButton: { folder: "ui.button", safelist: true },
+  UButton: { folder: "ui.button", safelist: ["UIcon", "ULoader"] },
   ULink: { folder: "ui.button-link", safelist: true },
   UToggle: { folder: "ui.button-toggle" },
   UToggleItem: { folder: "ui.button-toggle-item" },
@@ -16,6 +16,7 @@ export const COMPONENTS = {
   UDropdownButton: { folder: "ui.dropdown-button", safelist: ["UIcon"] },
   UDropdownBadge: { folder: "ui.dropdown-badge", safelist: ["UIcon"] },
   UDropdownLink: { folder: "ui.dropdown-link", safelist: ["UIcon"] },
+  UDropdownList: { folder: "ui.dropdown-list" },
 
   /* Form Inputs & Controls */
   UInput: { folder: "ui.form-input" },
@@ -26,13 +27,11 @@ export const COMPONENTS = {
   UInputRating: { folder: "ui.form-input-rating" },
   UTextarea: { folder: "ui.form-textarea" },
   USelect: { folder: "ui.form-select" },
-  UMultiselect: { folder: "ui.form-select-multi" },
   UCheckbox: { folder: "ui.form-checkbox", safelist: true },
   UCheckboxGroup: { folder: "ui.form-checkbox-group", safelist: ["UCheckbox"] },
   UCheckboxMultiState: { folder: "ui.form-checkbox-multi-state", safelist: ["UCheckbox"] },
   USwitch: { folder: "ui.form-switch", safelist: ["UIcon"] },
   URadio: { folder: "ui.form-radio", safelist: true },
-  URadioCard: { folder: "ui.form-radio-card", safelist: ["UIcon", "URadio"] },
   URadioGroup: { folder: "ui.form-radio-group", safelist: true },
   UCalendar: { folder: "ui.form-calendar" },
   UDatePicker: { folder: "ui.form-date-picker" },
@@ -58,13 +57,12 @@ export const COMPONENTS = {
   UGroup: { folder: "ui.container-group" },
   UAccordion: { folder: "ui.container-accordion" },
   UCard: { folder: "ui.container-card" },
-  UModal: { folder: "ui.container-modal", safelist: ["UButton"] },
+  UModal: { folder: "ui.container-modal" },
   UModalConfirm: { folder: "ui.container-modal-confirm", safelist: ["UButton"] },
   UPage: { folder: "ui.container-page" },
 
   /* Images and Icons */
   UIcon: { folder: "ui.image-icon", safelist: true },
-  ULogo: { folder: "ui.image-logo" },
   UAvatar: { folder: "ui.image-avatar", safelist: ["UIcon"] },
 
   /* Data */
